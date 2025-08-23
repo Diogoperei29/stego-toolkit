@@ -1,0 +1,5 @@
+This project includes third-party software:
+
+- stb_image.h and stb_image_write.h
+  Copyright (C) Sean Barrett
+  Licensed under the MIT License
