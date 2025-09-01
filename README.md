@@ -1,4 +1,4 @@
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) [![C++ Standard](https://img.shields.io/badge/C%2B%2B-17-blue.svg)](https://isocpp.org/std/the-standard) [![Build System](https://img.shields.io/badge/Build-CMake-orange.svg)](https://cmake.org/) [![CI](https://img.shields.io/github/actions/workflow/status/Diogoperei29/stego-toolkit/ci.yml?branch=main)](https://github.com/Diogoperei29/stego-toolkit/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) [![Build System](https://img.shields.io/badge/Build-CMake-orange.svg)](https://cmake.org/) [![C++ Standard](https://img.shields.io/badge/C%2B%2B-17-blue.svg)](https://isocpp.org/std/the-standard) [![CI](https://img.shields.io/github/actions/workflow/status/Diogoperei29/stego-toolkit/ci.yml?branch=main)](https://github.com/Diogoperei29/stego-toolkit/actions/workflows/ci.yml)
 
 # Steganography Toolkit
 
