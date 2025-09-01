@@ -52,8 +52,6 @@ private:
     void ExtractLSB(const std::vector<uint8_t> &pixels,
                     std::vector<uint8_t> &extractedData);
 
-    void EncryptData(std::vector<uint8_t> &data, const std::string &password);
-    void DecryptData(std::vector<uint8_t> &data, const std::string &password);
 };
 
 #endif // IMAGE_STEGO_HANDLER_H

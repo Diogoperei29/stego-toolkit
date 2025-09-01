@@ -2,7 +2,7 @@
 #include "Utils.h"
 #include "CryptoModule.h"
 
-#include "third_party/stb_image.h"
+#include "stb_image.h"
 #include <vector>
 #include <string>
 #include <iostream>
@@ -140,12 +140,4 @@ void ImageStegoHandler::ExtractLSB(const std::vector<uint8_t> &pixels,
             extractedData[byteIdx] |= (bit << bitIdx);
         }
     }
-}
-
-void ImageStegoHandler::EncryptData(std::vector<uint8_t> &data, const std::string &password) {
-    // Implement data encryption logic here
-}
-
-void ImageStegoHandler::DecryptData(std::vector<uint8_t> &data, const std::string &password) {
-    // Implement data decryption logic here
 }

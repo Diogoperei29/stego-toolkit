@@ -1,10 +1,10 @@
 #include "Utils.h"
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "third_party/stb_image.h"
+#include "stb_image.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "third_party/stb_image_write.h"
+#include "stb_image_write.h"
 
 bool LoadImage(const std::string &filename,
                std::vector<uint8_t> &pixels,
