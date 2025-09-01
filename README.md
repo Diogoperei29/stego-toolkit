@@ -23,7 +23,7 @@ This is v1.0, focused on **image-based steganography** with **AES encryption**.
 ## Build Instructions
 ```bash
 # Clone repository
-git clone https://github.com/Diogoperei29/Steganography-Toolkit.git
+git clone https://github.com/Diogoperei29/stego-toolkit.git
 cd Steganography-Toolkit
 
 # Create build directory
