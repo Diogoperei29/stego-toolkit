@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  build:
+    name: Build (${{ matrix.os }} | ${{ matrix.build_type }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        build_type: [Release, Debug]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup CMake
+        uses: lukka/get-cmake@v3
+
+      - name: Cache CMake/FetchContent
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ runner.temp }}/_github_workflow_cache
+            build/_deps
+            build/CMakeCache.txt
+            build/CMakeFiles
+          key: ${{ runner.os }}-cmake-${{ hashFiles('CMakeLists.txt', 'src/**', '.github/workflows/ci.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-cmake-
+
+      - name: Configure
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        env:
+          # CMake will download deps via FetchContent; no extra setup needed
+          CMAKE_FETCHCONTENT_BASE_DIR: ${{ runner.temp }}/_github_workflow_cache
+
+      - name: Build
+        run: cmake --build build --config ${{ matrix.build_type }} --parallel
+        
+      # Later add testing here
+      
+      - name: Upload artifact (binary)
+        if: matrix.os == 'ubuntu-latest' && matrix.build_type == 'Release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: stegtool-linux-release
+          path: build/stegtool
