@@ -1,0 +1,24 @@
+This project includes third-party software:
+
+- stb_image.h and stb_image_write.h
+  Copyright (c) Sean Barrett
+  License: MIT/Public Domain
+  Source: https://github.com/nothings/stb
+
+- cxxopts
+  Copyright (c) 2014–2025 Jarryd Beck and contributors
+  License: MIT
+  Version: v3.3.1
+  Source: https://github.com/jarro2783/cxxopts
+
+- GoogleTest (googletest / gtest, gmock)
+  Copyright (c) 2008–2025 Google Inc.
+  License: BSD 3-Clause
+  Version: v1.17.0
+  Source: https://github.com/google/googletest
+
+- OpenSSL
+  Copyright (c) 1998–2025 The OpenSSL Project Authors
+  License: Apache License 2.0
+  Version: 3.5.1
+  Source: https://www.openssl.org/ and https://github.com/openssl/openssl
