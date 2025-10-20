@@ -6,14 +6,22 @@
 #include <cstdint>
 
 /**
- * @brief Provides AES-256-CBC encryption and decryption utilities.
+ * @brief Static class to provide AES-256-CBC encryption and decryption utilities.
  *
  * Uses PBKDF2-HMAC-SHA256 for key derivation with a random salt,
  * and AES-256-CBC for encryption/decryption with a random IV.
  */
 class CryptoModule
 {
+private:
+    // Cryptographic constants
+    static constexpr int SALT_SIZE = 16;   // Salt size for PBKDF2 (128 bits)
+    static constexpr int IV_SIZE   = 16;   // AES block size (128-bit IV)
+    static constexpr int KEY_SIZE  = 32;   // AES-256 key size (256 bits)
+    static constexpr int PBKDF2_ITERATIONS = 10000; // PBKDF2 iteration count
+    
 public:
+    CryptoModule() = delete;
     /**
     * @brief Encrypts data with AES-256-CBC using a password.
     *

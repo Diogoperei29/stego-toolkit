@@ -73,12 +73,12 @@ set(LIB_HEADERS
 # StegTool library
 add_library(stegtool_lib STATIC ${LIB_SOURCES} ${LIB_HEADERS})
 target_include_directories(stegtool_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
-target_link_libraries(stegtool_lib PUBLIC OpenSSL::Crypto stb_headers)
+target_link_libraries(stegtool_lib PUBLIC OpenSSL::Crypto stb_headers cxxopts::cxxopts)
 target_compile_options(stegtool_lib PRIVATE ${WARNING_FLAGS})
 
 # Main Executable
 add_executable(stegtool src/main.cpp)
-target_link_libraries(stegtool PRIVATE stegtool_lib cxxopts::cxxopts)
+target_link_libraries(stegtool PRIVATE stegtool_lib)
 target_compile_options(stegtool PRIVATE ${WARNING_FLAGS})
 
 

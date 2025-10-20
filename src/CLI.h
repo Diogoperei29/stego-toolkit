@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <cxxopts.hpp>
 
 /**
  * @brief Command-line interface handler for stegtool.
@@ -13,6 +14,7 @@
 class CLI
 {
 public:
+   CLI() = delete;
    /**
     * @brief Runs the CLI with given arguments
     *
@@ -23,7 +25,11 @@ public:
    static int Run(int argc, char *argv[]);
 
 private:
-   static void PrintUsage();
+   static cxxopts::Options BuildCxxOptions();
+   static void PrintDescription();
+   static void PrintExamples();
+   static void PrintEmbedUsage();
+   static void PrintExtractUsage();
 };
 
 #endif // _STEGO_CLI_H

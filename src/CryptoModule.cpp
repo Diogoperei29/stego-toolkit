@@ -9,10 +9,6 @@
 bool CryptoModule::EncryptData(const std::vector<uint8_t> &plainData,
                                const std::string &password,
                                std::vector<uint8_t> &encryptedData) {
-    const int SALT_SIZE = 16;   // Salt size for PBKDF2
-    const int IV_SIZE   = 16;   // AES block size (128-bit IV)
-    const int KEY_SIZE  = 32;   // AES-256
-
     // Generate a random salt
     std::vector<uint8_t> salt(SALT_SIZE);
     if (RAND_bytes(salt.data(), SALT_SIZE) != 1) {
@@ -24,7 +20,7 @@ bool CryptoModule::EncryptData(const std::vector<uint8_t> &plainData,
     std::vector<uint8_t> key(KEY_SIZE);
     if (PKCS5_PBKDF2_HMAC(password.c_str(), static_cast<int>(password.size()),
                           salt.data(), SALT_SIZE,
-                          10000, EVP_sha256(),
+                          PBKDF2_ITERATIONS, EVP_sha256(),
                           KEY_SIZE, key.data()) != 1) {
         ERR_print_errors_fp(stderr);
         return false;
@@ -87,10 +83,6 @@ bool CryptoModule::EncryptData(const std::vector<uint8_t> &plainData,
 bool CryptoModule::DecryptData(const std::vector<uint8_t> &encryptedData,
                                const std::string &password,
                                std::vector<uint8_t> &plainData) {
-    const int SALT_SIZE = 16;   // Salt size for PBKDF2
-    const int IV_SIZE   = 16;   // AES block size (128-bit IV)
-    const int KEY_SIZE  = 32;   // AES-256
-
     // Check minimum size
     if (encryptedData.size() < SALT_SIZE + IV_SIZE) {
         std::cerr << "Encrypted data too small." << std::endl;
@@ -111,7 +103,7 @@ bool CryptoModule::DecryptData(const std::vector<uint8_t> &encryptedData,
     std::vector<uint8_t> key(KEY_SIZE);
     if (PKCS5_PBKDF2_HMAC(password.c_str(), static_cast<int>(password.size()),
                           salt.data(), SALT_SIZE,
-                          10000, EVP_sha256(),
+                          PBKDF2_ITERATIONS, EVP_sha256(),
                           KEY_SIZE, key.data()) != 1) {
         ERR_print_errors_fp(stderr);
         return false;

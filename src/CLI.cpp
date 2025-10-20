@@ -2,61 +2,175 @@
 #include "ImageStegoHandler.h"
 #include <iostream>
 
-void CLI::PrintUsage() {
-    std::cerr << "Usage:\n"
-              << "  stegtool embed -i <cover> -d <data> -o <output> -p <password>\n"
-              << "  stegtool extract -i <stego> -o <output> -p <password>\n";
+int CLI::Run(int argc, char *argv[]) {
+    try {
+        cxxopts::Options options = BuildCxxOptions();
+        // Parse arguments
+        auto parsedOptions = options.parse(argc, argv);
+
+        // Handle help
+        if (parsedOptions.count("help") || argc == 1) {
+            std::cout << options.help() << "\n\n";
+            PrintExamples();
+            return 0;
+        }
+
+        // Handle version
+        if (parsedOptions.count("version")) {
+            std::cout << "stegtool version 1.0.0\n"; // To-Do: fix hardcode
+            std::cout << "Built with AES-256-CBC encryption and LSB steganography\n";
+            return 0;
+        }
+
+        if (argc < 2) {
+            std::cerr << "-- Error: No command specified. --\n\n";
+            std::cout << options.help() << "\n\n";
+            PrintExamples();
+            return 1;
+        }
+
+        std::string command = argv[1];
+        ImageStegoHandler handler;
+
+        // Handle embed command
+        if (command == "embed") {
+            if (!parsedOptions.count("input") || !parsedOptions.count("data") || 
+                !parsedOptions.count("output") || !parsedOptions.count("password")) {
+                std::cerr << "-- Error: Missing required arguments for 'embed' command. --\n\n";
+                PrintEmbedUsage();
+                return 1;
+            }
+
+            std::string inputFile = parsedOptions["input"].as<std::string>();
+            std::string dataFile = parsedOptions["data"].as<std::string>();
+            std::string outputFile = parsedOptions["output"].as<std::string>();
+            std::string password = parsedOptions["password"].as<std::string>();
+
+            std::cout << "Embedding data...\n";
+            std::cout << "  Cover image: " << inputFile << "\n";
+            std::cout << "  Data file:   " << dataFile << "\n";
+            std::cout << "  Output file: " << outputFile << "\n";
+
+            if (!handler.Embed(inputFile, dataFile, outputFile, password)) {
+                std::cerr << "\n-- Error: Embedding failed. --\n";
+                return 1;
+            }
+
+            std::cout << "\n++ Data embedded successfully into " << outputFile << " ++\n";
+            return 0;
+        }
+
+        // Handle extract command
+        else if (command == "extract") {
+            if (!parsedOptions.count("input") || !parsedOptions.count("output") || !parsedOptions.count("password")) {
+                std::cerr << "-- Error: Missing required arguments for 'extract' command. --\n\n";
+                PrintExtractUsage();
+                return 1;
+            }
+
+            std::string inputFile = parsedOptions["input"].as<std::string>();
+            std::string outputFile = parsedOptions["output"].as<std::string>();
+            std::string password = parsedOptions["password"].as<std::string>();
+
+            std::cout << "Extracting data...\n";
+            std::cout << "  Stego image: " << inputFile << "\n";
+            std::cout << "  Output file: " << outputFile << "\n";
+
+            if (!handler.Extract(inputFile, outputFile, password)) {
+                std::cerr << "\n-- Error: Extraction failed. --\n";
+                std::cerr << "Please check:\n";
+                std::cerr << "  - Input file exists and is readable\n";
+                std::cerr << "  - File contains embedded data\n";
+                std::cerr << "  - Password is correct\n";
+                return 1;
+            }
+
+            std::cout << "\n++ Data extracted successfully to " << outputFile << " ++\n";
+            return 0;
+        }
+        else {
+            std::cerr << "Error: Unknown command '" << command << "' --\n\n";
+            std::cout << options.help() << "\n\n";
+            PrintExamples();
+            return 1;
+        }
+
+    } catch (const cxxopts::exceptions::exception& e) {
+        std::cerr << "-- Error parsing arguments: " << e.what() << " --\n\n";
+        PrintExamples();
+        return 1;
+    } catch (const std::exception& e) {
+        std::cerr << "-- Error: " << e.what() << " --\n";
+        return 1;
+    }
 }
 
-int CLI::Run(int argc, char *argv[]) {
-    if (argc < 2) {
-        PrintUsage();
-        return 1;
-    }
 
-    std::string command = argv[1];
-    std::string inputFile, dataFile, outputFile, password;
 
-    // argument parsing
-    for (int i = 2; i < argc; i++) {
-        std::string arg = argv[i];
-        if (arg == "-i" && i + 1 < argc) inputFile = argv[++i];
-        else if (arg == "-d" && i + 1 < argc) dataFile = argv[++i];
-        else if (arg == "-o" && i + 1 < argc) outputFile = argv[++i];
-        else if (arg == "-p" && i + 1 < argc) password = argv[++i];
-    }
+cxxopts::Options CLI::BuildCxxOptions()
+{
+    // Create the main options parser
+    cxxopts::Options options("stegtool", "Steganography Toolkit - Hide and extract data in images");
 
-    ImageStegoHandler handler;
+    // Add global options
+    options.add_options()
+        ("h,help", "Display this help message")
+        ("v,version", "Display version information");
 
-    if (command == "embed") {
-        if (inputFile.empty() || dataFile.empty() || outputFile.empty() || password.empty()) {
-            std::cerr << "Missing arguments for embed.\n";
-            PrintUsage();
-            return 1;
-        }
-        if (!handler.Embed(inputFile, dataFile, outputFile, password)) {
-            std::cerr << "Embedding failed.\n";
-            return 1;
-        }
-        std::cout << "Data embedded successfully into " << outputFile << "\n";
-    }
-    else if (command == "extract") {
-        if (inputFile.empty() || outputFile.empty() || password.empty()) {
-            std::cerr << "Missing arguments for extract.\n";
-            PrintUsage();
-            return 1;
-        }
-        if (!handler.Extract(inputFile, outputFile, password)) {
-            std::cerr << "Extraction failed.\n";
-            return 1;
-        }
-        std::cout << "Data extracted successfully into " << outputFile << "\n";
-    }
-    else {
-        std::cerr << "Unknown command: " << command << "\n";
-        PrintUsage();
-        return 1;
-    }
+    // Add subcommand options
+    options.add_options("Embed")
+        ("embed", "Embed data into an image")
+        ("i,input", "Input cover image file (PNG format)", cxxopts::value<std::string>())
+        ("d,data", "Data file to hide in the image", cxxopts::value<std::string>())
+        ("o,output", "Output stego image file", cxxopts::value<std::string>())
+        ("p,password", "Password for encryption", cxxopts::value<std::string>());
 
-    return 0;
+    options.add_options("Extract")
+        ("extract", "Extract data from an image")
+        ("I,input-stego", "Input stego image file", cxxopts::value<std::string>())
+        ("O,output-data", "Output file for extracted data", cxxopts::value<std::string>())
+        ("P,password-extract", "Password for decryption", cxxopts::value<std::string>());
+
+    // Custom help message
+    options.custom_help("[COMMAND] [OPTIONS]");
+    
+    // Set positional help
+    options.positional_help("COMMAND");
+    return options;
+}
+
+void CLI::PrintDescription() {
+    std::cout << "\nDESCRIPTION:\n"
+              << "  stegtool uses Least Significant Bit (LSB) steganography to hide data\n"
+              << "  within images. The data is encrypted using AES-256-CBC before\n"
+              << "  embedding, ensuring confidentiality even if the steganography is detected.\n\n"
+              << "  The tool modifies the least significant bits of the image pixels to store\n"
+              << "  encrypted data.\n\n";
+}
+
+void CLI::PrintExamples() {
+    std::cout << "Examples:\n"
+              << "  Embed a secret message:\n"
+              << "    stegtool embed -i cover.png -d secret.txt -o stego.png -p mypassword\n\n"
+              << "  Extract the hidden message:\n"
+              << "    stegtool extract -i stego.png -o recovered.txt -p mypassword\n\n";
+}
+
+void CLI::PrintEmbedUsage() {
+    std::cout << "Embed Usage:\n"
+              << "  stegtool embed -i <cover_image> -d <data_file> -o <output_image> -p <password>\n\n"
+              << "  Required arguments:\n"
+              << "    -i, --input <file>     Cover image (PNG format) to hide data in\n"
+              << "    -d, --data <file>      File containing data to hide\n"
+              << "    -o, --output <file>    Output stego image (PNG format)\n"
+              << "    -p, --password <pass>  Password for encrypting the data\n";
+}
+
+void CLI::PrintExtractUsage() {
+    std::cout << "Extract Usage:\n"
+              << "  stegtool extract -i <stego_image> -o <output_file> -p <password>\n\n"
+              << "  Required arguments:\n"
+              << "    -i, --input <file>     Stego image (PNG format) with hidden data\n"
+              << "    -o, --output <file>    Output file for extracted data\n"
+              << "    -p, --password <pass>  Password for decrypting the data\n";
 }
