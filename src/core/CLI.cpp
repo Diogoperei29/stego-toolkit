@@ -1,6 +1,8 @@
 #include "CLI.h"
-#include "ImageStegoHandler.h"
+#include "../algorithms/lsb/LSBStegoHandler.h"
 #include <iostream>
+#include <fstream>
+#include <filesystem>
 
 int CLI::Run(int argc, char *argv[]) {
     try {
@@ -30,7 +32,7 @@ int CLI::Run(int argc, char *argv[]) {
         }
 
         std::string command = argv[1];
-        ImageStegoHandler handler;
+        LSBStegoHandler handler;
 
         // Handle embed command
         if (command == "embed") {
@@ -45,6 +47,12 @@ int CLI::Run(int argc, char *argv[]) {
             std::string dataFile = parsedOptions["data"].as<std::string>();
             std::string outputFile = parsedOptions["output"].as<std::string>();
             std::string password = parsedOptions["password"].as<std::string>();
+
+            // Check for output file overwrite
+            if (!ConfirmOverwrite(inputFile, outputFile)) {
+                std::cout << "\nOperation cancelled by user.\n";
+                return 0;
+            }
 
             std::cout << "Embedding data...\n";
             std::cout << "  Cover image: " << inputFile << "\n";
@@ -71,6 +79,12 @@ int CLI::Run(int argc, char *argv[]) {
             std::string inputFile = parsedOptions["input"].as<std::string>();
             std::string outputFile = parsedOptions["output"].as<std::string>();
             std::string password = parsedOptions["password"].as<std::string>();
+
+            // Check for output file overwrite
+            if (!ConfirmOverwrite(inputFile, outputFile)) {
+                std::cout << "\nOperation cancelled by user.\n";
+                return 0;
+            }
 
             std::cout << "Extracting data...\n";
             std::cout << "  Stego image: " << inputFile << "\n";
@@ -173,4 +187,54 @@ void CLI::PrintExtractUsage() {
               << "    -i, --input <file>     Stego image (PNG format) with hidden data\n"
               << "    -o, --output <file>    Output file for extracted data\n"
               << "    -p, --password <pass>  Password for decrypting the data\n";
+}
+
+bool CLI::ConfirmOverwrite(const std::string& inputFile, const std::string& outputFile) {
+    namespace fs = std::filesystem;
+    
+    try {
+        // Get absolute paths for comparison
+        fs::path inputPath = fs::absolute(inputFile);
+        fs::path outputPath = fs::absolute(outputFile);
+        
+        // Check if input and output are the same file (only if both exist)
+        if (fs::exists(inputPath) && fs::exists(outputPath) && 
+            fs::equivalent(inputPath, outputPath)) {
+            std::cout << "\n[!] WARNING: Output file is the same as input file!\n";
+            std::cout << "    Input:  " << inputPath.string() << "\n";
+            std::cout << "    Output: " << outputPath.string() << "\n";
+            std::cout << "\n    This will OVERWRITE the original file.\n";
+            std::cout << "    Do you want to continue? (y/n): ";
+            
+            std::string response;
+            std::getline(std::cin, response);
+            
+            if (response.empty() || (response[0] != 'y' && response[0] != 'Y')) {
+                return false;
+            }
+            return true;
+        }
+        
+        // Check if output file already exists
+        if (fs::exists(outputPath)) {
+            std::cout << "\n[!] WARNING: Output file already exists!\n";
+            std::cout << "    File: " << outputPath.string() << "\n";
+            std::cout << "\n    Do you want to overwrite it? (y/n): ";
+            
+            std::string response;
+            std::getline(std::cin, response);
+            
+            if (response.empty() || (response[0] != 'y' && response[0] != 'Y')) {
+                return false;
+            }
+            return true;
+        }
+        
+        // No conflict, proceed
+        return true;
+        
+    } catch (const fs::filesystem_error& e) {
+        // If there's a filesystem error (e.g., path doesn't exist), just proceed
+        return true;
+    }
 }

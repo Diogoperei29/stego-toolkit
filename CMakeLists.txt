@@ -55,19 +55,18 @@ endif()
 
 # Create a library for the core functionality (used by both main and tests)
 set(LIB_SOURCES
-  src/CLI.cpp
-  src/ImageStegoHandler.cpp
-  src/CryptoModule.cpp
-  src/Utils.cpp
+  src/core/CLI.cpp
+  src/utils/CryptoModule.cpp
+  src/utils/Utils.cpp
+  src/algorithms/lsb/LSBStegoHandler.cpp
 )
 
 set(LIB_HEADERS
-  src/StegoHandler.h
-
-  src/CLI.h
-  src/ImageStegoHandler.h
-  src/CryptoModule.h
-  src/Utils.h
+  src/algorithms/StegoHandler.h
+  src/core/CLI.h
+  src/utils/CryptoModule.h
+  src/utils/Utils.h
+  src/algorithms/lsb/LSBStegoHandler.h
 )
 
 # StegTool library

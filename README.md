@@ -2,82 +2,176 @@
 
 # Steganography Toolkit
 
-A C++ steganography toolkit for hiding and extracting data inside media files.  
-This is v1.0, focused on **image-based steganography** with **AES encryption**.
+A modern C++ toolkit for hiding and extracting data within images using steganography techniques combined with strong encryption.
+
+## Features
+
+- **Image Steganography** - Hide data inside PNG/BMP/JPEG images
+- **Strong Encryption** - AES-256-CBC with PBKDF2-HMAC-SHA256 key derivation (10,000 iterations)
+- **Standard Compliance** - OpenSSL-compatible encryption format
+- **Modular Architecture** - Extensible design supporting multiple steganography algorithms (planned)
+- **Cross-Platform** - Windows, Linux
+- **External Dependencies** - Libraries fetched automatically via CMake (excluding OpenSSL)
 
 ---
 
-## Features (v1.0)
-- Hide and extract arbitrary data inside **BMP/PNG images**.
-- **LSB (Least Significant Bit)** embedding method.
-- **AES-256 encryption** with password protection (PBKDF2-HMAC-SHA256 key derivation).
-- Modular design → scalable to audio, video, and advanced algorithms.
+## Quick Start
 
----
+### Prerequisites
 
-## Dependencies
-- C++17 or later
-- CMake 3.15+
-- [OpenSSL](https://www.openssl.org/) (for AES encryption + PBKDF2)
-- [cxxopts](https://github.com/jarro2783/cxxopts) (CLI parsing) – fetched automatically via CMake FetchContent
-- [stb_image / stb_image_write](https://github.com/nothings/stb) – fetched automatically via CMake FetchContent
+**Linux/macOS:**
+```bash
+# Ubuntu/Debian
+sudo apt install build-essential cmake libssl-dev
 
-Notes:
-- Third-party libraries are downloaded at configure time using CMake FetchContent.
-- The stb headers are treated as SYSTEM includes to suppress some third‑party warnings.
+# macOS
+brew install cmake openssl
+```
 
----
+**Windows:**
+- Install [Visual Studio 2017+](https://visualstudio.microsoft.com/) or [MinGW-w64](https://www.mingw-w64.org/)
+- Install [CMake](https://cmake.org/download/)
+- Install [OpenSSL](https://slproweb.com/products/Win32OpenSSL.html)
 
-## Build Instructions
+### Build
+
 ```bash
 # Clone repository
 git clone https://github.com/Diogoperei29/stego-toolkit.git
 cd stego-toolkit
 
-# Create build directory
-mkdir build && cd build
-
 # Configure and build
+mkdir build && cd build
 cmake ..
 cmake --build .
 ```
 
+### Usage
+
+**Embed data into an image:**
+```bash
+stegtool embed -i cover.png -d secret.txt -o stego.png -p mypassword
+```
+
+**Extract hidden data:**
+```bash
+stegtool extract -i stego.png -o recovered.txt -p mypassword
+```
+
+**Get help:**
+```bash
+stegtool --help
+stegtool -h
+stegtool --version
+```
+
 ---
 
-## Run Instructions:
-```bash
-# Embed
-./stegtool --command embed -i cover.png -d secret.txt -o stego.png -p "mypassword"
+## How It Works
 
-# Extract
-./stegtool --command extract -i stego.png -o recovered.txt -p "mypassword"
+### Encryption Layer
+1. User provides a password and data file
+2. Random salt (16 bytes) is generated
+3. Key derived from password + salt using PBKDF2-HMAC-SHA256 (10,000 iterations)
+4. Random IV (16 bytes) is generated
+5. Data encrypted with AES-256-CBC
+6. Output format: `[salt | IV | ciphertext]`
 
-# Help
-./stegtool --help
-```
+### Embedding Layer
+The encrypted payload is embedded into the image using the selected algorithm. The algorithm modifies pixel values in a way that is imperceptible to the human eye while storing the data securely.
+
+### Extraction Layer
+1. Load stego image and extract embedded data
+2. Decrypt using password (derives same key from stored salt)
+3. Save recovered plaintext
+
+**Security Model:**
+- **Password is the only secret** - Without it, data cannot be decrypted
+- **Salt prevents rainbow tables** - Each encryption uses unique random salt
+- **IV prevents pattern analysis** - Identical plaintexts encrypt differently
+- **Standard format** - Compatible with OpenSSL and other standard tools
 
 ---
 
 ## Project Structure
 
 ```
-/stegtool
+stegtool/
 ├── src/
-│   ├── main.cpp                 # Entry point
-│   ├── CLI.h/.cpp               # CLI parsing (cxxopts)
-│   ├── StegoHandler.h           # Abstract base class
-│   ├── ImageStegoHandler.h/.cpp # LSB embed/extract
-│   ├── CryptoModule.h/.cpp      # AES-256-CBC + PBKDF2-HMAC-SHA256
-│   ├── Utils.h/.cpp             # stb-based image load/save
-├── CMakeLists.txt
-├── NOTICE                       # Third-party notices
-├── LICENSE
+│   ├── main.cpp
+│   ├── core/                         # Application logic
+│   │   └── CLI.h/.cpp
+│   ├── utils/                        # Utility modules
+│   │   ├── CryptoModule.h/.cpp       # AES-256-CBC encryption
+│   │   └── Utils.h/.cpp              # Image I/O (stb library)
+│   └── algorithms/                   # Steganography algorithms
+│       ├── StegoHandler.h            # Abstract base class
+│       └── lsb/                      # LSB implementation
+│           ├── LSBStegoHandler.h
+│           └── LSBStegoHandler.cpp
+├── tests/
+│   └── test_all.cpp                  # Unit tests (Google Test)
+├── CMakeLists.txt                    # Build configuration
+├── LICENSE                           # Apache 2.0 license
+├── THIRD-PARTY                       # Third-party attribution
 └── README.md
 ```
 
+
+## Dependencies
+
+The project uses the following libraries, automatically fetched via CMake FetchContent:
+
+| Library | Purpose | License |
+|---------|---------|---------|
+| [OpenSSL](https://www.openssl.org/) | AES-256-CBC encryption, PBKDF2 | Apache 2.0 |
+| [cxxopts](https://github.com/jarro2783/cxxopts) | Command-line parsing | MIT |
+| [stb](https://github.com/nothings/stb) | Image loading/saving | MIT/Public Domain |
+| [Google Test](https://github.com/google/googletest) | Unit testing framework | BSD-3-Clause |
+
+**System Requirements:**
+- C++17 compatible compiler (GCC 7+, Clang 5+, MSVC 2017+)
+- CMake 3.16 or later
+- OpenSSL development libraries (system-installed)
+
 ---
 
-## How It Works (High Level)
-- Encrypt data with AES-256-CBC; store payload as [salt | iv | ciphertext]
-- Embed encrypted payload into image pixel LSBs
-- Extract payload from LSBs and decrypt with the provided password
+## CLI Reference
+
+### Commands
+
+**`embed`** - Hide data inside an image
+```bash
+stegtool embed -i <cover_image> -d <data_file> -o <output_image> -p <password>
+
+Options:
+  -i, --input     Input cover image (PNG/BMP/JPEG)
+  -d, --data      Data file to hide
+  -o, --output    Output stego image
+  -p, --password  Password for encryption
+```
+
+**`extract`** - Extract hidden data from an image
+```bash
+stegtool extract -i <stego_image> -o <output_file> -p <password>
+
+Options:
+  -i, --input     Input stego image
+  -o, --output    Output file for extracted data
+  -p, --password  Password for decryption
+```
+> [!WARNING]  
+> If you ommit output file or use the same name, the program will ask to overwrite the file and wait for additional user input.
+
+### Global Options
+- `-h, --help` - Display help message
+- `-v, --version` - Display version information
+
+---
+
+## License
+
+This project is licensed under the Apache License 2.0 - see [LICENSE](LICENSE) file.
+
+Third-party library licenses are documented in [THIRD-PARTY](THIRD-PARTY).
+

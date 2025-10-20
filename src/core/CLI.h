@@ -30,6 +30,7 @@ private:
    static void PrintExamples();
    static void PrintEmbedUsage();
    static void PrintExtractUsage();
+   static bool ConfirmOverwrite(const std::string& inputFile, const std::string& outputFile);
 };
 
 #endif // _STEGO_CLI_H

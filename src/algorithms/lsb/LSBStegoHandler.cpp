@@ -1,6 +1,6 @@
-#include "ImageStegoHandler.h"
-#include "Utils.h"
-#include "CryptoModule.h"
+#include "LSBStegoHandler.h"
+#include "../../utils/Utils.h"
+#include "../../utils/CryptoModule.h"
 
 #include "stb_image.h"
 #include <vector>
@@ -8,7 +8,7 @@
 #include <iostream>
 #include <fstream>
 
-bool ImageStegoHandler::Embed(const std::string &coverFile,
+bool LSBStegoHandler::Embed(const std::string &coverFile,
                               const std::string &dataFile,
                               const std::string &outputFile,
                               const std::string &password) {
@@ -50,7 +50,7 @@ bool ImageStegoHandler::Embed(const std::string &coverFile,
 }
 
 
-bool ImageStegoHandler::Extract(const std::string &stegoFile,
+bool LSBStegoHandler::Extract(const std::string &stegoFile,
                                 const std::string &outputFile,
                                 const std::string &password)
 {
@@ -85,7 +85,7 @@ bool ImageStegoHandler::Extract(const std::string &stegoFile,
 }
 
 
-void ImageStegoHandler::EmbedLSB(std::vector<uint8_t> &pixels,
+void LSBStegoHandler::EmbedLSB(std::vector<uint8_t> &pixels,
                                  const std::vector<uint8_t> &dataToEmbed) {
 
     uint32_t dataSize = static_cast<uint32_t>(dataToEmbed.size());
@@ -94,7 +94,7 @@ void ImageStegoHandler::EmbedLSB(std::vector<uint8_t> &pixels,
         return;
     }
 
-    // Embed data size at the start
+    // Embed data size at the start (32 bits)
     for (size_t idx = 0; idx < 32; ++idx) {
         uint8_t bit = (dataSize >> idx) & 1;
         pixels[idx] = (pixels[idx] & 0xFE) | bit; // Set LSB to the size bit
@@ -111,7 +111,7 @@ void ImageStegoHandler::EmbedLSB(std::vector<uint8_t> &pixels,
 }
 
 
-void ImageStegoHandler::ExtractLSB(const std::vector<uint8_t> &pixels,
+void LSBStegoHandler::ExtractLSB(const std::vector<uint8_t> &pixels,
                                    std::vector<uint8_t> &extractedData) {
     
     if (pixels.size() < 32) {
