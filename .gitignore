@@ -34,5 +34,8 @@ Thumbs.db
 /tests/*.o
 
 # Generated images/files (tmeporary for testing)
-/stego.png
-/recovered.txt
+*.txt
+*.png
+*.jpg
+*.jpeg
+*.bmp
