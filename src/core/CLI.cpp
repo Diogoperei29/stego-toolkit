@@ -233,7 +233,7 @@ bool CLI::ConfirmOverwrite(const std::string& inputFile, const std::string& outp
         // No conflict, proceed
         return true;
         
-    } catch (const fs::filesystem_error& e) {
+    } catch (const fs::filesystem_error&) {
         // If there's a filesystem error (e.g., path doesn't exist), just proceed
         return true;
     }
