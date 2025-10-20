@@ -100,10 +100,11 @@ stegtool/
 ├── src/
 │   ├── main.cpp
 │   ├── core/                         # Application logic
-│   │   └── CLI.h/.cpp
+│   │   └── CLI.h/.cpp                # Command-line interface
 │   ├── utils/                        # Utility modules
+│   │   ├── ErrorHandler.h/.cpp       # Result<T> error handling system
 │   │   ├── CryptoModule.h/.cpp       # AES-256-CBC encryption
-│   │   └── Utils.h/.cpp              # Image I/O (stb library)
+│   │   └── ImageIO.h/.cpp            # Image loading/saving (stb library)
 │   └── algorithms/                   # Steganography algorithms
 │       ├── StegoHandler.h            # Abstract base class
 │       └── lsb/                      # LSB implementation

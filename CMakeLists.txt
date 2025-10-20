@@ -57,7 +57,8 @@ endif()
 set(LIB_SOURCES
   src/core/CLI.cpp
   src/utils/CryptoModule.cpp
-  src/utils/Utils.cpp
+  src/utils/ErrorHandler.cpp
+  src/utils/ImageIO.cpp
   src/algorithms/lsb/LSBStegoHandler.cpp
 )
 
@@ -65,7 +66,8 @@ set(LIB_HEADERS
   src/algorithms/StegoHandler.h
   src/core/CLI.h
   src/utils/CryptoModule.h
-  src/utils/Utils.h
+  src/utils/ErrorHandler.h
+  src/utils/ImageIO.h
   src/algorithms/lsb/LSBStegoHandler.h
 )
 

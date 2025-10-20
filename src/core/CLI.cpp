@@ -59,8 +59,10 @@ int CLI::Run(int argc, char *argv[]) {
             std::cout << "  Data file:   " << dataFile << "\n";
             std::cout << "  Output file: " << outputFile << "\n";
 
-            if (!handler.Embed(inputFile, dataFile, outputFile, password)) {
-                std::cerr << "\n-- Error: Embedding failed. --\n";
+            auto embedResult = handler.Embed(inputFile, dataFile, outputFile, password);
+            if (!embedResult) {
+                std::cerr << "\n-- Embedding Failed --\n";
+                std::cerr << "Error: " << embedResult.GetErrorMessage() << "\n";
                 return 1;
             }
 
@@ -90,12 +92,10 @@ int CLI::Run(int argc, char *argv[]) {
             std::cout << "  Stego image: " << inputFile << "\n";
             std::cout << "  Output file: " << outputFile << "\n";
 
-            if (!handler.Extract(inputFile, outputFile, password)) {
-                std::cerr << "\n-- Error: Extraction failed. --\n";
-                std::cerr << "Please check:\n";
-                std::cerr << "  - Input file exists and is readable\n";
-                std::cerr << "  - File contains embedded data\n";
-                std::cerr << "  - Password is correct\n";
+            auto extractResult = handler.Extract(inputFile, outputFile, password);
+            if (!extractResult) {
+                std::cerr << "\n-- Extraction Failed --\n";
+                std::cerr << "Error: " << extractResult.GetErrorMessage() << "\n";
                 return 1;
             }
 
@@ -114,7 +114,7 @@ int CLI::Run(int argc, char *argv[]) {
         PrintExamples();
         return 1;
     } catch (const std::exception& e) {
-        std::cerr << "-- Error: " << e.what() << " --\n";
+        std::cerr << "-- Exception ocurred: " << e.what() << " --\n";
         return 1;
     }
 }
@@ -200,7 +200,7 @@ bool CLI::ConfirmOverwrite(const std::string& inputFile, const std::string& outp
         // Check if input and output are the same file (only if both exist)
         if (fs::exists(inputPath) && fs::exists(outputPath) && 
             fs::equivalent(inputPath, outputPath)) {
-            std::cout << "\n[!] WARNING: Output file is the same as input file!\n";
+            std::cout << "\n[!] WARNING: Output file is the same as input file! [!]\n";
             std::cout << "    Input:  " << inputPath.string() << "\n";
             std::cout << "    Output: " << outputPath.string() << "\n";
             std::cout << "\n    This will OVERWRITE the original file.\n";
@@ -217,7 +217,7 @@ bool CLI::ConfirmOverwrite(const std::string& inputFile, const std::string& outp
         
         // Check if output file already exists
         if (fs::exists(outputPath)) {
-            std::cout << "\n[!] WARNING: Output file already exists!\n";
+            std::cout << "\n[!] WARNING: Output file already exists! [!]\n";
             std::cout << "    File: " << outputPath.string() << "\n";
             std::cout << "\n    Do you want to overwrite it? (y/n): ";
             
@@ -230,7 +230,6 @@ bool CLI::ConfirmOverwrite(const std::string& inputFile, const std::string& outp
             return true;
         }
         
-        // No conflict, proceed
         return true;
         
     } catch (const fs::filesystem_error&) {

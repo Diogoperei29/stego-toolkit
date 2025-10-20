@@ -1,5 +1,5 @@
-#ifndef _STEGO_CLI_H
-#define _STEGO_CLI_H
+#ifndef __STEGO_CLI_H_
+#define __STEGO_CLI_H_
 
 #include <vector>
 #include <string>
@@ -33,4 +33,4 @@ private:
    static bool ConfirmOverwrite(const std::string& inputFile, const std::string& outputFile);
 };
 
-#endif // _STEGO_CLI_H
+#endif // __STEGO_CLI_H_

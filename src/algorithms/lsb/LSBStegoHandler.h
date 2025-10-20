@@ -1,7 +1,8 @@
-#ifndef LSB_STEGO_HANDLER_H
-#define LSB_STEGO_HANDLER_H
+#ifndef __LSB_STEGO_HANDLER_H_
+#define __LSB_STEGO_HANDLER_H_
 
 #include "../StegoHandler.h"
+#include "../../utils/ImageIO.h"
 
 /**
  * @brief Implements LSB (Least Significant Bit) steganography for images.
@@ -15,57 +16,82 @@ public:
     /**
     * @brief Embeds a file into a cover image using LSB steganography.
     *
-    * Loads the cover image, encrypts the data file with AES-256-CBC,
-    * and embeds the encrypted data into the image pixels using LSB.
-    *
-    * @param coverFile Path to the input cover image.
-    * @param dataFile Path to the file to embed.
-    * @param outputFile Path to save the stego image.
-    * @param password Password used for AES encryption.
-    * @return true if embedding succeeded, false otherwise.
+    * @param coverFile Path to the input cover image
+    * @param dataFile Path to the file to embed
+    * @param outputFile Path to save the stego image
+    * @param password Password used for AES encryption
+    * @return Result indicating success or detailed error
     */
-    bool Embed(const std::string &coverFile,
-               const std::string &dataFile,
-               const std::string &outputFile,
-               const std::string &password) override;
+    Result<> Embed(const std::string &coverFile,
+                   const std::string &dataFile,
+                   const std::string &outputFile,
+                   const std::string &password) override;
 
     /**
     * @brief Extracts a hidden file from a stego image using LSB steganography.
     *
-    * Loads the stego image, extracts the encrypted payload using LSB,
-    * and decrypts it with AES-256-CBC using the provided password.
-    *
-    * @param stegoFile Path to the stego image.
-    * @param outputFile Path to save the recovered file.
-    * @param password Password used for AES decryption.
-    * @return true if extraction succeeded, false otherwise.
+    * @param stegoFile Path to the stego image
+    * @param outputFile Path to save the recovered file
+    * @param password Password used for AES decryption
+    * @return Result indicating success or detailed error
     */
-    bool Extract(const std::string &stegoFile,
-                 const std::string &outputFile,
-                 const std::string &password) override;
+    Result<> Extract(const std::string &stegoFile,
+                     const std::string &outputFile,
+                     const std::string &password) override;
 
     ~LSBStegoHandler() override = default;
 
-    
 private:
+    static constexpr uint32_t HEADER_SIZE_BITS = 32;
+    static constexpr uint32_t MAX_REASONABLE_SIZE = 100 * 1024 * 1024; // 100MB sanity check
+    
+    /**
+     * @brief Calculate LSB steganography capacity in bytes for a given pixel count.
+     * 
+     * Each pixel can store 1 bit in its LSB. Capacity accounts for the header.
+     * 
+     * @param pixelCount Total number of pixel values (width * height * channels)
+     * @return Maximum bytes that can be embedded using LSB steganography
+     */
+    static std::size_t CalculateLSBCapacity(std::size_t pixelCount);
+    
+    /**
+     * @brief Calculate LSB steganography capacity for an image.
+     * 
+     * @param image Image data structure
+     * @return Maximum bytes that can be embedded using LSB steganography
+     */
+    static std::size_t CalculateLSBCapacity(const ImageData& image);
+    
+    /**
+     * @brief Validate image has sufficient LSB capacity for data.
+     * 
+     * @param pixelCount Total pixel values available
+     * @param dataSize Size of data to embed (in bytes)
+     * @return Result indicating success or capacity error with details
+     */
+    static Result<> ValidateLSBCapacity(std::size_t pixelCount, std::size_t dataSize);
+    
     /**
      * @brief Embeds data into pixel array using LSB technique.
      * 
-     * @param pixels Pixel data to modify (in-place).
-     * @param dataToEmbed Data to embed (already encrypted).
+     * Format: [32-bit size header | data bits]
+     * 
+     * @param pixels Pixel data to modify (in-place)
+     * @param dataToEmbed Data to embed (already encrypted)
+     * @return Result indicating success or embedding error
      */
-    void EmbedLSB(std::vector<uint8_t> &pixels,
-                  const std::vector<uint8_t> &dataToEmbed);
+    Result<> EmbedLSB(std::vector<uint8_t> &pixels,
+                      const std::vector<uint8_t> &dataToEmbed);
     
     /**
      * @brief Extracts data from pixel array using LSB technique.
      * 
-     * @param pixels Pixel data to read from.
-     * @param extractedData Output buffer for extracted data.
+     * @param pixels Pixel data to read from
+     * @return Result containing extracted data or error
      */
-    void ExtractLSB(const std::vector<uint8_t> &pixels,
-                    std::vector<uint8_t> &extractedData);
-
+    Result<std::vector<uint8_t>> ExtractLSB(const std::vector<uint8_t> &pixels);
 };
 
-#endif // LSB_STEGO_HANDLER_H
+
+#endif // __LSB_STEGO_HANDLER_H_
