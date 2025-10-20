@@ -19,13 +19,9 @@ A modern C++ toolkit for hiding and extracting data within images using steganog
 
 ### Prerequisites
 
-**Linux/macOS:**
+**Linux:**
 ```bash
-# Ubuntu/Debian
 sudo apt install build-essential cmake libssl-dev
-
-# macOS
-brew install cmake openssl
 ```
 
 **Windows:**
