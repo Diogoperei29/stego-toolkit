@@ -22,7 +22,7 @@ bool CryptoModule::EncryptData(const std::vector<uint8_t> &plainData,
 
     // Derive a 256-bit key from the password + salt using PBKDF2-HMAC-SHA256
     std::vector<uint8_t> key(KEY_SIZE);
-    if (PKCS5_PBKDF2_HMAC(password.c_str(), password.size(),
+    if (PKCS5_PBKDF2_HMAC(password.c_str(), static_cast<int>(password.size()),
                           salt.data(), SALT_SIZE,
                           10000, EVP_sha256(),
                           KEY_SIZE, key.data()) != 1) {
@@ -57,7 +57,7 @@ bool CryptoModule::EncryptData(const std::vector<uint8_t> &plainData,
 
     // Encrypt the plaintext in chunks
     if (EVP_EncryptUpdate(ctx, ciphertext.data(), &len,
-                          plainData.data(), plainData.size()) != 1) {
+                          plainData.data(), static_cast<int>(plainData.size())) != 1) {
         ERR_print_errors_fp(stderr);
         EVP_CIPHER_CTX_free(ctx);
         return false;
@@ -109,7 +109,7 @@ bool CryptoModule::DecryptData(const std::vector<uint8_t> &encryptedData,
 
     // Derive the same 256-bit key from password + salt
     std::vector<uint8_t> key(KEY_SIZE);
-    if (PKCS5_PBKDF2_HMAC(password.c_str(), password.size(),
+    if (PKCS5_PBKDF2_HMAC(password.c_str(), static_cast<int>(password.size()),
                           salt.data(), SALT_SIZE,
                           10000, EVP_sha256(),
                           KEY_SIZE, key.data()) != 1) {
@@ -136,7 +136,7 @@ bool CryptoModule::DecryptData(const std::vector<uint8_t> &encryptedData,
 
     // Decrypt ciphertext
     if (EVP_DecryptUpdate(ctx, plaintext.data(), &len,
-                          ciphertext.data(), ciphertext.size()) != 1) {
+                          ciphertext.data(), static_cast<int>(ciphertext.size())) != 1) {
         ERR_print_errors_fp(stderr);
         EVP_CIPHER_CTX_free(ctx);
         return false;
