@@ -1,0 +1,18 @@
+UTF-8 Test File 🔐
+
+English: Hello, World!
+Spanish: ¡Hola, Mundo!
+French: Bonjour, monde!
+German: Hallo, Welt!
+Russian: Привет, мир!
+Chinese: 你好，世界！
+Japanese: こんにちは、世界！
+Arabic: مرحبا بالعالم!
+Emoji: 🌍 🔒 🗝️ 💾 ✅ ❌ 🎯
+
+Mathematical symbols: ∑∫∂∇∞≈≠±×÷
+Currency: $€£¥¢
+Quotes: "double" 'single' «guillemets» 
+Special: ©®™°•…–—
+
+This file tests Unicode (UTF-8) handling in steganography.

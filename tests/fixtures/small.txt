@@ -1,0 +1,3 @@
+Hello, World!
+This is a small test file for steganography testing.
+It contains just a few lines of text.

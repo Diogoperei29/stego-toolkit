@@ -86,14 +86,57 @@ target_compile_options(stegtool PRIVATE ${WARNING_FLAGS})
 
 enable_testing()
 
-# General Unit Tests
-add_executable(test_all tests/test_all.cpp)
-target_link_libraries(test_all PRIVATE stegtool_lib GTest::gtest_main)
+# Test helpers library (shared by all tests)
+add_library(test_helpers STATIC tests/test_helpers.cpp tests/test_helpers.h)
+target_include_directories(test_helpers PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/tests)
+target_link_libraries(test_helpers PUBLIC stegtool_lib)
+target_compile_options(test_helpers PRIVATE ${TEST_WARNING_FLAGS})
+target_compile_definitions(test_helpers PUBLIC # definitions to find paths faster
+    TEST_FIXTURES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures"
+    TEST_OUTPUT_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/output"
+)
+
+# Unit tests
+add_executable(test_unit
+    tests/unit/test_lsb_handler.cpp
+    tests/unit/test_crypto.cpp
+    tests/unit/test_image_io.cpp
+    tests/unit/test_error_handler.cpp
+)
+target_link_libraries(test_unit PRIVATE stegtool_lib test_helpers GTest::gtest_main)
+target_compile_options(test_unit PRIVATE ${TEST_WARNING_FLAGS})
+
+# Integration tests
+add_executable(test_integration
+    tests/integration/test_embed_extract.cpp
+)
+target_link_libraries(test_integration PRIVATE stegtool_lib test_helpers GTest::gtest_main)
+target_compile_options(test_integration PRIVATE ${TEST_WARNING_FLAGS})
+
+# E2E/CLI tests
+add_executable(test_e2e
+    tests/e2e/test_cli.cpp
+)
+target_link_libraries(test_e2e PRIVATE stegtool_lib test_helpers GTest::gtest_main)
+target_compile_options(test_e2e PRIVATE ${TEST_WARNING_FLAGS})
+
+# All tests  - order of tests is reverse of the order here
+add_executable(test_all
+    tests/e2e/test_cli.cpp
+    tests/integration/test_embed_extract.cpp
+    tests/unit/test_lsb_handler.cpp
+    tests/unit/test_crypto.cpp
+    tests/unit/test_image_io.cpp
+    tests/unit/test_error_handler.cpp
+)
+target_link_libraries(test_all PRIVATE stegtool_lib test_helpers GTest::gtest_main)
 target_compile_options(test_all PRIVATE ${TEST_WARNING_FLAGS})
 
-# Add tests to CTest
-add_test(NAME TestAll COMMAND test_all)
-
+# Add all tests to CTest
+add_test(NAME UnitTests COMMAND test_unit)
+add_test(NAME IntegrationTests COMMAND test_integration)
+add_test(NAME E2ETests COMMAND test_e2e)
+add_test(NAME AllTests COMMAND test_all)
 
 
 # Print build information

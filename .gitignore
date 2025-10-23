@@ -32,10 +32,6 @@ Thumbs.db
 /tests/*.exe
 /tests/*.out
 /tests/*.o
+/tests/output/*
 
-# Generated images/files (tmeporary for testing)
-*.txt
-*.png
-*.jpg
-*.jpeg
-*.bmp
+**/IGNOREME.md

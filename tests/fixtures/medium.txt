@@ -1,0 +1,14 @@
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
+Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. 
+Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. 
+Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+
+This file is designed to test medium-sized data embedding. It should fit comfortably in a 512x512 image.
+
+The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs. How vexingly quick daft zebras jump!
+
+Line breaks, spaces, and punctuation are all part of the test data.
+Special characters: !@#$%^&*()_+-=[]{}|;':",./<>?
+Numbers: 0123456789
+
+This should be enough text to test basic embedding and extraction functionality.

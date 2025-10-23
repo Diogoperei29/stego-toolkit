@@ -1,5 +1,5 @@
-#ifndef ERROR_HANDLER_H
-#define ERROR_HANDLER_H
+#ifndef __ERROR__HANDLER_H_
+#define __ERROR__HANDLER_H_
 
 #include <string>
 #include <optional>
@@ -116,4 +116,4 @@ public:
 };
 
 
-#endif // ERROR_HANDLER_H
+#endif // __ERROR__HANDLER_H_
