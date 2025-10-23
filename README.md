@@ -19,13 +19,9 @@ A modern C++ toolkit for hiding and extracting data within images using steganog
 
 ### Prerequisites
 
-**Linux/macOS:**
+**Linux:**
 ```bash
-# Ubuntu/Debian
 sudo apt install build-essential cmake libssl-dev
-
-# macOS
-brew install cmake openssl
 ```
 
 **Windows:**
@@ -45,6 +41,11 @@ mkdir build && cd build
 cmake ..
 cmake --build .
 ```
+
+> [!NOTE]  
+> To use this anywhere, the build folder to your PATH (might automate this later somehow).
+> - Windows: add the absolute path to build to your user PATH, then restart your terminal.
+> - Linux: add export PATH="/absolute/path/to/project/build:$PATH" to your shell profile (e.g., ~/.bashrc), then reload it.
 
 ### Usage
 
