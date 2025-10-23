@@ -32,93 +32,114 @@ int CLI::Run(int argc, char *argv[]) {
         }
 
         std::string command = argv[1];
-        LSBStegoHandler handler;
 
         // Handle embed command
         if (command == "embed") {
-            if (!parsedOptions.count("input") || !parsedOptions.count("data") || 
-                !parsedOptions.count("output") || !parsedOptions.count("password")) {
-                std::cerr << "-- Error: Missing required arguments for 'embed' command. --\n\n";
-                PrintEmbedUsage();
-                return 1;
-            }
-
-            std::string inputFile = parsedOptions["input"].as<std::string>();
-            std::string dataFile = parsedOptions["data"].as<std::string>();
-            std::string outputFile = parsedOptions["output"].as<std::string>();
-            std::string password = parsedOptions["password"].as<std::string>();
-
-            // Check for output file overwrite
-            if (!ConfirmOverwrite(inputFile, outputFile)) {
-                std::cout << "\nOperation cancelled by user.\n";
-                return 0;
-            }
-
-            std::cout << "Embedding data...\n";
-            std::cout << "  Cover image: " << inputFile << "\n";
-            std::cout << "  Data file:   " << dataFile << "\n";
-            std::cout << "  Output file: " << outputFile << "\n";
-
-            auto embedResult = handler.Embed(inputFile, dataFile, outputFile, password);
-            if (!embedResult) {
-                std::cerr << "\n-- Embedding Failed --\n";
-                std::cerr << "Error: " << embedResult.GetErrorMessage() << "\n";
-                return 1;
-            }
-
-            std::cout << "\n++ Data embedded successfully into " << outputFile << " ++\n";
-            return 0;
+            return HandleEmbedCommand(parsedOptions);
         }
 
         // Handle extract command
         else if (command == "extract") {
-            if (!parsedOptions.count("input") || !parsedOptions.count("output") || !parsedOptions.count("password")) {
-                std::cerr << "-- Error: Missing required arguments for 'extract' command. --\n\n";
-                PrintExtractUsage();
-                return 1;
-            }
-
-            std::string inputFile = parsedOptions["input"].as<std::string>();
-            std::string outputFile = parsedOptions["output"].as<std::string>();
-            std::string password = parsedOptions["password"].as<std::string>();
-
-            // Check for output file overwrite
-            if (!ConfirmOverwrite(inputFile, outputFile)) {
-                std::cout << "\nOperation cancelled by user.\n";
-                return 0;
-            }
-
-            std::cout << "Extracting data...\n";
-            std::cout << "  Stego image: " << inputFile << "\n";
-            std::cout << "  Output file: " << outputFile << "\n";
-
-            auto extractResult = handler.Extract(inputFile, outputFile, password);
-            if (!extractResult) {
-                std::cerr << "\n-- Extraction Failed --\n";
-                std::cerr << "Error: " << extractResult.GetErrorMessage() << "\n";
-                return 1;
-            }
-
-            std::cout << "\n++ Data extracted successfully to " << outputFile << " ++\n";
-            return 0;
+            return HandleExtractCommand(parsedOptions);
         }
         else {
-            std::cerr << "Error: Unknown command '" << command << "' --\n\n";
+            std::cerr << "Error: Unknown command '" << command << "'\n\n";
             std::cout << options.help() << "\n\n";
             PrintExamples();
             return 1;
         }
 
     } catch (const cxxopts::exceptions::exception& e) {
-        std::cerr << "-- Error parsing arguments: " << e.what() << " --\n\n";
+        std::cerr << "Error parsing arguments: " << e.what() << "\n\n";
         PrintExamples();
         return 1;
     } catch (const std::exception& e) {
-        std::cerr << "-- Exception ocurred: " << e.what() << " --\n";
+        std::cerr << "Exception occurred: " << e.what() << "\n";
         return 1;
     }
 }
 
+int CLI::HandleEmbedCommand(const cxxopts::ParseResult& parsedOptions) {
+    if (!parsedOptions.count("input") || !parsedOptions.count("data") || 
+        !parsedOptions.count("output")) {
+        std::cerr << "Error: Missing required arguments for 'embed' command.\n\n";
+        PrintEmbedUsage();
+        return 1;
+    }
+
+    std::string inputFile = parsedOptions["input"].as<std::string>();
+    std::string dataFile = parsedOptions["data"].as<std::string>();
+    std::string outputFile = parsedOptions["output"].as<std::string>();
+    std::string password = "";
+    
+    if (parsedOptions.count("password")) {
+        password = parsedOptions["password"].as<std::string>();
+    } else {
+        std::cout << "WARNING: No password provided. Data will be encrypted with an empty password.\n";
+        std::cout << "         This provides minimal security.\n\n";
+    }
+
+    // Check for output file overwrite
+    if (!ConfirmOverwrite(inputFile, outputFile)) {
+        std::cout << "\nOperation cancelled by user.\n";
+        return 0;
+    }
+
+    std::cout << "Embedding data...\n";
+    std::cout << "  Cover image: " << inputFile << "\n";
+    std::cout << "  Data file:   " << dataFile << "\n";
+    std::cout << "  Output file: " << outputFile << "\n";
+
+    LSBStegoHandler handler;
+    auto embedResult = handler.Embed(inputFile, dataFile, outputFile, password);
+    if (!embedResult) {
+        std::cerr << "\nEmbedding Failed\n";
+        std::cerr << "Error: " << embedResult.GetErrorMessage() << "\n";
+        return 1;
+    }
+
+    std::cout << "\nData embedded successfully into " << outputFile << "\n";
+    return 0;
+}
+
+int CLI::HandleExtractCommand(const cxxopts::ParseResult& parsedOptions) {
+    if (!parsedOptions.count("input") || !parsedOptions.count("output")) {
+        std::cerr << "Error: Missing required arguments for 'extract' command.\n\n";
+        PrintExtractUsage();
+        return 1;
+    }
+
+    std::string inputFile = parsedOptions["input"].as<std::string>();
+    std::string outputFile = parsedOptions["output"].as<std::string>();
+    std::string password = "";
+    
+    if (parsedOptions.count("password")) {
+        password = parsedOptions["password"].as<std::string>();
+    } else {
+        std::cout << "WARNING: No password provided. Attempting decryption with empty password.\n\n";
+    }
+
+    // Check for output file overwrite
+    if (!ConfirmOverwrite(inputFile, outputFile)) {
+        std::cout << "\nOperation cancelled by user.\n";
+        return 0;
+    }
+
+    std::cout << "Extracting data...\n";
+    std::cout << "  Stego image: " << inputFile << "\n";
+    std::cout << "  Output file: " << outputFile << "\n";
+
+    LSBStegoHandler handler;
+    auto extractResult = handler.Extract(inputFile, outputFile, password);
+    if (!extractResult) {
+        std::cerr << "\nExtraction Failed\n";
+        std::cerr << "Error: " << extractResult.GetErrorMessage() << "\n";
+        return 1;
+    }
+
+    std::cout << "\nData extracted successfully to " << outputFile << "\n";
+    return 0;
+}
 
 
 cxxopts::Options CLI::BuildCxxOptions()
@@ -172,21 +193,23 @@ void CLI::PrintExamples() {
 
 void CLI::PrintEmbedUsage() {
     std::cout << "Embed Usage:\n"
-              << "  stegtool embed -i <cover_image> -d <data_file> -o <output_image> -p <password>\n\n"
+              << "  stegtool embed -i <cover_image> -d <data_file> -o <output_image> [-p <password>]\n\n"
               << "  Required arguments:\n"
               << "    -i, --input <file>     Cover image (PNG format) to hide data in\n"
               << "    -d, --data <file>      File containing data to hide\n"
-              << "    -o, --output <file>    Output stego image (PNG format)\n"
-              << "    -p, --password <pass>  Password for encrypting the data\n";
+              << "    -o, --output <file>    Output stego image (PNG format)\n\n"
+              << "  Optional arguments:\n"
+              << "    -p, --password <pass>  Password for encrypting the data (empty if not provided)\n";
 }
 
 void CLI::PrintExtractUsage() {
     std::cout << "Extract Usage:\n"
-              << "  stegtool extract -i <stego_image> -o <output_file> -p <password>\n\n"
+              << "  stegtool extract -i <stego_image> -o <output_file> [-p <password>]\n\n"
               << "  Required arguments:\n"
               << "    -i, --input <file>     Stego image (PNG format) with hidden data\n"
-              << "    -o, --output <file>    Output file for extracted data\n"
-              << "    -p, --password <pass>  Password for decrypting the data\n";
+              << "    -o, --output <file>    Output file for extracted data\n\n"
+              << "  Optional arguments:\n"
+              << "    -p, --password <pass>  Password for decrypting the data (empty if not provided)\n";
 }
 
 bool CLI::ConfirmOverwrite(const std::string& inputFile, const std::string& outputFile) {
@@ -200,7 +223,7 @@ bool CLI::ConfirmOverwrite(const std::string& inputFile, const std::string& outp
         // Check if input and output are the same file (only if both exist)
         if (fs::exists(inputPath) && fs::exists(outputPath) && 
             fs::equivalent(inputPath, outputPath)) {
-            std::cout << "\n[!] WARNING: Output file is the same as input file! [!]\n";
+            std::cout << "\nWARNING: Output file is the same as input file\n";
             std::cout << "    Input:  " << inputPath.string() << "\n";
             std::cout << "    Output: " << outputPath.string() << "\n";
             std::cout << "\n    This will OVERWRITE the original file.\n";
@@ -217,7 +240,7 @@ bool CLI::ConfirmOverwrite(const std::string& inputFile, const std::string& outp
         
         // Check if output file already exists
         if (fs::exists(outputPath)) {
-            std::cout << "\n[!] WARNING: Output file already exists! [!]\n";
+            std::cout << "\nWARNING: Output file already exists\n";
             std::cout << "    File: " << outputPath.string() << "\n";
             std::cout << "\n    Do you want to overwrite it? (y/n): ";
             

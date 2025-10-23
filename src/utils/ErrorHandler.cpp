@@ -55,9 +55,7 @@ std::string ErrorHandler::GetErrorDescription(ErrorCode code) {
         case ErrorCode::DecryptionFailed:
             return "Decryption operation failed";
         case ErrorCode::InvalidPassword:
-            return "Incorrect password or authentication failed";
-        case ErrorCode::KeyDerivationFailed:
-            return "Failed to derive encryption key";
+            return "Incorrect password or corrupted data";
             
         // Embedding/Extraction errors
         case ErrorCode::EmbeddingFailed:
@@ -67,7 +65,7 @@ std::string ErrorHandler::GetErrorDescription(ErrorCode code) {
         case ErrorCode::InvalidDataSize:
             return "Embedded data size is invalid or corrupted";
         case ErrorCode::CorruptedPayload:
-            return "Embedded payload is corrupted";
+            return "Data structure is corrupted or invalid";
         case ErrorCode::NoEmbeddedData:
             return "No embedded data found in image";
             

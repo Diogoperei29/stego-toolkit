@@ -31,7 +31,6 @@ enum class ErrorCode {
     EncryptionFailed = 400,
     DecryptionFailed = 401,
     InvalidPassword = 402,
-    KeyDerivationFailed = 403,
     
     // Embedding/Extraction errors
     EmbeddingFailed = 500,

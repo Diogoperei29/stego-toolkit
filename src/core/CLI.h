@@ -31,6 +31,8 @@ private:
    static void PrintEmbedUsage();
    static void PrintExtractUsage();
    static bool ConfirmOverwrite(const std::string& inputFile, const std::string& outputFile);
+   static int HandleEmbedCommand(const cxxopts::ParseResult& parsedOptions);
+   static int HandleExtractCommand(const cxxopts::ParseResult& parsedOptions);
 };
 
 #endif // __STEGO_CLI_H_
