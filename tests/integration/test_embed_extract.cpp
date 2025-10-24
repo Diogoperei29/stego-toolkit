@@ -150,7 +150,11 @@ TEST_F(EmbedExtractTest, GrayscaleVsRGBCapacity) {
     
     // RGB images have ~3x capacity of grayscale (3 color channels vs 1)
     EXPECT_GT(rgbCapacity, grayCapacity);
-    EXPECT_NEAR(rgbCapacity, grayCapacity * 3, grayCapacity * 0.1);
+    EXPECT_NEAR(
+        static_cast<double>(rgbCapacity),
+        static_cast<double>(grayCapacity) * 3.0,
+        static_cast<double>(grayCapacity) * 0.1
+    );
 }
 
 // Password Integration Tests
