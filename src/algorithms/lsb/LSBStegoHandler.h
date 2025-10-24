@@ -39,9 +39,6 @@ public:
                      const std::string &outputFile,
                      const std::string &password) override;
 
-    ~LSBStegoHandler() override = default;
-
-private:
     static constexpr uint32_t HEADER_SIZE_BITS = 32;
     static constexpr uint32_t MAX_REASONABLE_SIZE = 100 * 1024 * 1024; // 100MB sanity check
     
@@ -91,6 +88,9 @@ private:
      * @return Result containing extracted data or error
      */
     Result<std::vector<uint8_t>> ExtractLSB(const std::vector<uint8_t> &pixels);
+
+    ~LSBStegoHandler() override = default;
+
 };
 
 

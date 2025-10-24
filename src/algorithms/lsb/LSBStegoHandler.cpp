@@ -20,6 +20,13 @@ std::size_t LSBStegoHandler::CalculateLSBCapacity(const ImageData& image) {
 }
 
 Result<> LSBStegoHandler::ValidateLSBCapacity(std::size_t pixelCount, std::size_t dataSize) {
+    if (dataSize > MAX_REASONABLE_SIZE) {
+        std::ostringstream oss;
+        oss << "Data size (" << dataSize << " bytes) exceeds maximum reasonable size (" 
+            << MAX_REASONABLE_SIZE << " bytes)";
+        return Result<>(ErrorCode::DataTooLarge, oss.str());
+    }
+    
     std::size_t availableCapacity = CalculateLSBCapacity(pixelCount);
     
     if (dataSize > availableCapacity) {
@@ -166,6 +173,10 @@ Result<> LSBStegoHandler::Extract(const std::string &stegoFile,
 
 Result<> LSBStegoHandler::EmbedLSB(std::vector<uint8_t> &pixels,
                                     const std::vector<uint8_t> &dataToEmbed) {
+    
+    if (dataToEmbed.empty()) {
+        return Result<>(ErrorCode::InvalidArgument, "Cannot embed empty data");
+    }
     
     uint32_t dataSize = static_cast<uint32_t>(dataToEmbed.size());
     

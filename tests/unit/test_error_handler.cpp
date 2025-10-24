@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 #include "utils/ErrorHandler.h"
 
+// Result<T> Construction Tests
+
 TEST(ErrorHandler_Result, ConstructsSuccessWithValue) {
     Result<int> result(42);
     
@@ -84,6 +86,8 @@ TEST(ErrorHandler_Result, ErrorMessageIsAccessible) {
     EXPECT_EQ(result.GetErrorMessage(), customMessage);
 }
 
+// ErrorCode Enum Tests
+
 TEST(ErrorHandler_ErrorCode, HasFileIOCodes) {
     EXPECT_EQ(static_cast<int>(ErrorCode::FileNotFound), 100);
     EXPECT_EQ(static_cast<int>(ErrorCode::FileReadError), 101);
@@ -126,6 +130,8 @@ TEST(ErrorHandler_ErrorCode, HasGeneralCodes) {
     EXPECT_LT(static_cast<int>(ErrorCode::UnknownError), 1000);
 }
 
+// Helper Functions for Usage Tests
+
 static Result<int> FunctionThatCanFail(bool shouldFail) {
     if (shouldFail) {
         return Result<int>(ErrorCode::InvalidArgument, "Failed");
@@ -140,6 +146,8 @@ static Result<int> FunctionThatCallsAnother(bool shouldFail) {
     }
     return Result<int>(result.GetValue() * 2);
 }
+
+// Usage Pattern Tests
 
 TEST(ErrorHandler_Usage, SupportsChaining) {
     auto success = FunctionThatCallsAnother(false);
@@ -170,6 +178,8 @@ TEST(ErrorHandler_Usage, SupportsErrorPropagation) {
     EXPECT_EQ(propagated.GetErrorCode(), innerError.GetErrorCode());
     EXPECT_EQ(propagated.GetErrorMessage(), innerError.GetErrorMessage());
 }
+
+// Edge Case Tests
 
 TEST(ErrorHandler_Edge, HandlesEmptyErrorMessage) {
     Result<int> result(ErrorCode::UnknownError, "");
