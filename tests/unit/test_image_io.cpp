@@ -78,7 +78,7 @@ TEST_F(ImageIOTest, FailsOnMissingFile) {
     EXPECT_FALSE(msg.empty());
 }
 
-TEST_F(ImageIOTest, FailsOnInvalidImageData) {
+TEST_F(ImageIOTest, LoadFailsOnInvalidImageData) {
     auto result = ImageIO::Load(TestHelpers::GetFixturePath("empty.txt").string());
     EXPECT_TRUE(result.IsError());
     EXPECT_EQ(result.GetErrorCode(), ErrorCode::ImageLoadFailed);
@@ -229,7 +229,7 @@ TEST_F(ImageIOTest, FailsOnInvalidPath) {
     }
 }
 
-TEST_F(ImageIOTest, FailsOnInvalidImageData) {
+TEST_F(ImageIOTest, SaveFailsOnInvalidImageData) {
     ImageData invalidImage;
     invalidImage.width = 10;
     invalidImage.height = 10;
