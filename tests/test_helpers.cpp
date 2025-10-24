@@ -73,7 +73,16 @@ bool TestHelpers::ByteVectorsMatch(const std::vector<uint8_t>& data1,
 
 // Test Cleanup Helpers Implementation
 void TestHelpers::CleanOutputDirectory() {
-    for (const auto& entry : std::filesystem::directory_iterator(GetOutputDir())) {
+    auto outputDir = GetOutputDir();
+    
+    // Create the directory if it doesn't exist
+    if (!std::filesystem::exists(outputDir)) {
+        std::filesystem::create_directories(outputDir);
+        return;
+    }
+    
+    // Clean existing files in the directory
+    for (const auto& entry : std::filesystem::directory_iterator(outputDir)) {
         std::filesystem::remove(entry);
     }
 }
