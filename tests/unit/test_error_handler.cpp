@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "utils/ErrorHandler.h"
+#include "../test_helpers.h"
 
 // Result<T> Construction Tests
 
@@ -130,31 +131,14 @@ TEST(ErrorHandler_ErrorCode, HasGeneralCodes) {
     EXPECT_LT(static_cast<int>(ErrorCode::UnknownError), 1000);
 }
 
-// Helper Functions for Usage Tests
-
-static Result<int> FunctionThatCanFail(bool shouldFail) {
-    if (shouldFail) {
-        return Result<int>(ErrorCode::InvalidArgument, "Failed");
-    }
-    return Result<int>(100);
-}
-
-static Result<int> FunctionThatCallsAnother(bool shouldFail) {
-    auto result = FunctionThatCanFail(shouldFail);
-    if (result.IsError()) {
-        return result;
-    }
-    return Result<int>(result.GetValue() * 2);
-}
-
 // Usage Pattern Tests
 
 TEST(ErrorHandler_Usage, SupportsChaining) {
-    auto success = FunctionThatCallsAnother(false);
+    auto success = TestHelpers::FunctionThatCallsAnother(false);
     EXPECT_TRUE(success.IsSuccess());
     EXPECT_EQ(success.GetValue(), 200);
     
-    auto error = FunctionThatCallsAnother(true);
+    auto error = TestHelpers::FunctionThatCallsAnother(true);
     EXPECT_TRUE(error.IsError());
     EXPECT_EQ(error.GetErrorCode(), ErrorCode::InvalidArgument);
 }
@@ -170,10 +154,10 @@ TEST(ErrorHandler_Usage, SupportsValueExtraction) {
 }
 
 TEST(ErrorHandler_Usage, SupportsErrorPropagation) {
-    auto innerError = FunctionThatCanFail(true);
+    auto innerError = TestHelpers::FunctionThatCanFail(true);
     EXPECT_TRUE(innerError.IsError());
     
-    auto propagated = FunctionThatCallsAnother(true);
+    auto propagated = TestHelpers::FunctionThatCallsAnother(true);
     EXPECT_TRUE(propagated.IsError());
     EXPECT_EQ(propagated.GetErrorCode(), innerError.GetErrorCode());
     EXPECT_EQ(propagated.GetErrorMessage(), innerError.GetErrorMessage());

@@ -1,4 +1,5 @@
 #include "test_helpers.h"
+#include "utils/ErrorHandler.h"
 #include <fstream>
 #include <random>
 #include <stdexcept>
@@ -116,4 +117,20 @@ bool TestHelpers::FileExists(const std::filesystem::path& filepath) {
 std::size_t TestHelpers::GetFileSize(const std::filesystem::path& filepath) {
     if (!FileExists(filepath)) return 0;
     return std::filesystem::file_size(filepath);
+}
+
+// Error Handling Test Helpers
+Result<int> TestHelpers::FunctionThatCanFail(bool shouldFail) {
+    if (shouldFail) {
+        return Result<int>(ErrorCode::InvalidArgument, "Failed");
+    }
+    return Result<int>(100);
+}
+
+Result<int> TestHelpers::FunctionThatCallsAnother(bool shouldFail) {
+    auto result = FunctionThatCanFail(shouldFail);
+    if (result.IsError()) {
+        return result;
+    }
+    return Result<int>(result.GetValue() * 2);
 }
