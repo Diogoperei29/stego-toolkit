@@ -8,6 +8,7 @@ A modern C++ toolkit for hiding and extracting data within images using steganog
 
 - **Image Steganography** - Hide data inside PNG/BMP/JPEG images
 - **Strong Encryption** - AES-256-CBC with PBKDF2-HMAC-SHA256 key derivation (10,000 iterations)
+- **Authenticated Encryption** - HMAC-SHA256 for integrity verification (Encrypt-then-MAC)
 - **Standard Compliance** - OpenSSL-compatible encryption format
 - **Modular Architecture** - Extensible design supporting multiple steganography algorithms (planned)
 - **Cross-Platform** - Windows, Linux
@@ -76,20 +77,23 @@ stegtool --version
 3. Key derived from password + salt using PBKDF2-HMAC-SHA256 (10,000 iterations)
 4. Random IV (16 bytes) is generated
 5. Data encrypted with AES-256-CBC
-6. Output format: `[salt | IV | ciphertext]`
+6. HMAC-SHA256 computed over `[salt | IV | ciphertext]` for authentication
+7. Output format: `[salt | IV | ciphertext | HMAC]`
 
 ### Embedding Layer
 The encrypted payload is embedded into the image using the selected algorithm. The algorithm modifies pixel values in a way that is imperceptible to the human eye while storing the data securely.
 
 ### Extraction Layer
 1. Load stego image and extract embedded data
-2. Decrypt using password (derives same key from stored salt)
-3. Save recovered plaintext
+2. Verify HMAC using password-derived key (Encrypt-then-MAC)
+3. Decrypt ciphertext using password
+4. Save recovered plaintext
 
 **Security Model:**
 - **Password is the only secret** - Without it, data cannot be decrypted
 - **Salt prevents rainbow tables** - Each encryption uses unique random salt
 - **IV prevents pattern analysis** - Identical plaintexts encrypt differently
+- **HMAC provides authentication** - Detects tampering and wrong passwords
 - **Standard format** - Compatible with OpenSSL and other standard tools
 
 ---

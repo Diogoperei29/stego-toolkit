@@ -54,8 +54,8 @@ std::string ErrorHandler::GetErrorDescription(ErrorCode code) {
             return "Encryption operation failed";
         case ErrorCode::DecryptionFailed:
             return "Decryption operation failed";
-        case ErrorCode::InvalidPassword:
-            return "Incorrect password or corrupted data";
+        case ErrorCode::AuthenticationFailed:
+            return "Authentication failed (incorrect password or corrupted data)";
             
         // Embedding/Extraction errors
         case ErrorCode::EmbeddingFailed:

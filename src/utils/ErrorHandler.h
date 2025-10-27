@@ -30,7 +30,7 @@ enum class ErrorCode {
     // Encryption/Decryption errors
     EncryptionFailed = 400,
     DecryptionFailed = 401,
-    InvalidPassword = 402,
+    AuthenticationFailed = 402,
     
     // Embedding/Extraction errors
     EmbeddingFailed = 500,

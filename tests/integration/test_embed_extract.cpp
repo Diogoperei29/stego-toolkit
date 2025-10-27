@@ -189,7 +189,8 @@ TEST_F(EmbedExtractTest, WrongPasswordFails) {
     
     auto extractResult = handler.Extract(stegoPath, extractPath, "wrong");
     EXPECT_TRUE(extractResult.IsError());
-    EXPECT_EQ(extractResult.GetErrorCode(), ErrorCode::InvalidPassword);
+    // Wrong password causes HMAC verification to fail
+    EXPECT_EQ(extractResult.GetErrorCode(), ErrorCode::AuthenticationFailed);
 }
 
 TEST_F(EmbedExtractTest, PasswordCaseSensitivity) {
@@ -206,7 +207,8 @@ TEST_F(EmbedExtractTest, PasswordCaseSensitivity) {
     // passwords should be case-sensitive
     auto extractResult = handler.Extract(stegoPath, extractPath, "password");
     EXPECT_TRUE(extractResult.IsError());
-    EXPECT_EQ(extractResult.GetErrorCode(), ErrorCode::InvalidPassword);
+    // Wrong password causes HMAC verification to fail
+    EXPECT_EQ(extractResult.GetErrorCode(), ErrorCode::AuthenticationFailed);
 }
 
 TEST_F(EmbedExtractTest, SpecialCharacterPassword) {

@@ -2,8 +2,10 @@
 
 #include <iostream>
 #include <sstream>
+#include <cstring>
 #include <openssl/evp.h>
 #include <openssl/rand.h>
+#include <openssl/hmac.h>
 #include <openssl/err.h>
 
 std::string CryptoModule::GetOpenSSLError() {
@@ -92,12 +94,35 @@ Result<std::vector<uint8_t>> CryptoModule::EncryptData(
 
     EVP_CIPHER_CTX_free(ctx);
 
-    // Build output: [salt | IV | ciphertext]
+    // Resize ciphertext to actual length
+    ciphertext.resize(ciphertext_len);
+
+    // Build authenticated data: [salt | IV | ciphertext]
+    std::vector<uint8_t> dataToAuth;
+    dataToAuth.reserve(SALT_SIZE + IV_SIZE + ciphertext_len);
+    dataToAuth.insert(dataToAuth.end(), salt.begin(), salt.end());
+    dataToAuth.insert(dataToAuth.end(), iv.begin(), iv.end());
+    dataToAuth.insert(dataToAuth.end(), ciphertext.begin(), ciphertext.end());
+
+    // Compute HMAC-SHA256 over [salt | IV | ciphertext] using derived key
+    std::vector<uint8_t> hmac(HMAC_SIZE);
+    uint32_t hmac_len = 0;
+    if (HMAC(EVP_sha256(), key.data(), KEY_SIZE,
+             dataToAuth.data(), dataToAuth.size(),
+             hmac.data(), &hmac_len) == nullptr || hmac_len != HMAC_SIZE) {
+        return Result<std::vector<uint8_t>>(
+            ErrorCode::EncryptionFailed,
+            "HMAC computation failed"
+        );
+    }
+
+    // Build final output: [salt | IV | ciphertext | HMAC]
     std::vector<uint8_t> encryptedData;
-    encryptedData.reserve(SALT_SIZE + IV_SIZE + ciphertext_len);
+    encryptedData.reserve(SALT_SIZE + IV_SIZE + ciphertext_len + HMAC_SIZE);
     encryptedData.insert(encryptedData.end(), salt.begin(), salt.end());
     encryptedData.insert(encryptedData.end(), iv.begin(), iv.end());
-    encryptedData.insert(encryptedData.end(), ciphertext.begin(), ciphertext.begin() + ciphertext_len);
+    encryptedData.insert(encryptedData.end(), ciphertext.begin(), ciphertext.end());
+    encryptedData.insert(encryptedData.end(), hmac.begin(), hmac.end());
 
     return Result<std::vector<uint8_t>>(encryptedData);
 }
@@ -106,7 +131,7 @@ Result<std::vector<uint8_t>> CryptoModule::DecryptData(
     const std::vector<uint8_t> &encryptedData,
     const std::string &password) {
     
-    // Validate input size (salt + IV + at least one block)
+    // Validate input size (salt + IV + HMAC + at least one block)
     if (encryptedData.size() < static_cast<std::size_t>(MIN_SIZE)) {
         std::ostringstream oss;
         oss << "Data too small for decryption (" << encryptedData.size() 
@@ -117,12 +142,18 @@ Result<std::vector<uint8_t>> CryptoModule::DecryptData(
         );
     }
 
-    // Extract salt, IV and ciphertext
     std::vector<uint8_t> salt(encryptedData.begin(), encryptedData.begin() + SALT_SIZE);
     std::vector<uint8_t> iv(encryptedData.begin() + SALT_SIZE, 
                             encryptedData.begin() + SALT_SIZE + IV_SIZE);
-    std::vector<uint8_t> ciphertext(encryptedData.begin() + SALT_SIZE + IV_SIZE,
-                                    encryptedData.end());
+    
+    // Ciphertext is between IV and HMAC
+    const size_t ciphertext_start = SALT_SIZE + IV_SIZE;
+    const size_t ciphertext_end = encryptedData.size() - HMAC_SIZE;
+    std::vector<uint8_t> ciphertext(encryptedData.begin() + ciphertext_start,
+                                    encryptedData.begin() + ciphertext_end);
+    
+    // HMAC is the last HMAC_SIZE bytes
+    std::vector<uint8_t> receivedHmac(encryptedData.end() - HMAC_SIZE, encryptedData.end());
 
     // Derive key from password + salt
     std::vector<uint8_t> key(KEY_SIZE);
@@ -133,6 +164,33 @@ Result<std::vector<uint8_t>> CryptoModule::DecryptData(
         return Result<std::vector<uint8_t>>(
             ErrorCode::DecryptionFailed,
             "Key derivation failed"
+        );
+    }
+
+    // Verify HMAC before decrypting (Encrypt-then-MAC)
+    // Compute HMAC over [salt | IV | ciphertext]
+    std::vector<uint8_t> dataToAuth;
+    dataToAuth.reserve(SALT_SIZE + IV_SIZE + ciphertext.size());
+    dataToAuth.insert(dataToAuth.end(), salt.begin(), salt.end());
+    dataToAuth.insert(dataToAuth.end(), iv.begin(), iv.end());
+    dataToAuth.insert(dataToAuth.end(), ciphertext.begin(), ciphertext.end());
+
+    std::vector<uint8_t> computedHmac(HMAC_SIZE);
+    unsigned int hmac_len = 0;
+    if (HMAC(EVP_sha256(), key.data(), KEY_SIZE,
+             dataToAuth.data(), dataToAuth.size(),
+             computedHmac.data(), &hmac_len) == nullptr || hmac_len != HMAC_SIZE) {
+        return Result<std::vector<uint8_t>>(
+            ErrorCode::DecryptionFailed,
+            "HMAC computation failed"
+        );
+    }
+
+    // Constant-time comparison to prevent timing attacks
+    if (CRYPTO_memcmp(computedHmac.data(), receivedHmac.data(), HMAC_SIZE) != 0) {
+        return Result<std::vector<uint8_t>>(
+            ErrorCode::AuthenticationFailed,
+            "HMAC verification failed (incorrect password or corrupted data)"
         );
     }
 
@@ -167,12 +225,13 @@ Result<std::vector<uint8_t>> CryptoModule::DecryptData(
     }
     plaintext_len = len;
 
-    // Finalize decryption - this verifies padding and typically fails with wrong password
+    // Finalize decryption and verify padding
+    // Note: HMAC already verified, so padding errors indicate implementation bugs or edge cases
     if (EVP_DecryptFinal_ex(ctx, plaintext.data() + len, &len) != 1) {
         EVP_CIPHER_CTX_free(ctx);
         return Result<std::vector<uint8_t>>(
-            ErrorCode::InvalidPassword,
-            "Decryption failed (incorrect password or corrupted data)"
+            ErrorCode::DecryptionFailed,
+            "Decryption padding verification failed"
         );
     }
     plaintext_len += len;
