@@ -168,6 +168,14 @@ Options:
 ### Global Options
 - `-h, --help` - Display help message
 - `-v, --version` - Display version information
+---
+
+## To-Do
+
+- Research more algorithms and implement them (add as issues first please)
+- Add algorithm selector to CLI once more algorithms are implemented
+- Add a release builder on github actions
+- Change integration tests to run on all algorithms
 
 ---
 
