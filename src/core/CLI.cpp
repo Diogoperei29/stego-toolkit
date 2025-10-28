@@ -5,7 +5,7 @@
 #include <fstream>
 #include <filesystem>
 
-//#define STEGOHANDLER LSBShuffleStegoHandler //meanwhile change handler type here 
+#define STEGOHANDLER LSBShuffleStegoHandler //meanwhile change handler type here 
 
 int CLI::Run(int argc, char *argv[]) {
     try {
@@ -93,7 +93,7 @@ int CLI::HandleEmbedCommand(const cxxopts::ParseResult& parsedOptions) {
     std::cout << "  Data file:   " << dataFile << "\n";
     std::cout << "  Output file: " << outputFile << "\n";
 
-    LSBShuffleStegoHandler handler;
+    STEGOHANDLER handler;
     auto embedResult = handler.Embed(inputFile, dataFile, outputFile, password);
     if (!embedResult) {
         std::cerr << "\nEmbedding Failed\n";
@@ -132,7 +132,7 @@ int CLI::HandleExtractCommand(const cxxopts::ParseResult& parsedOptions) {
     std::cout << "  Stego image: " << inputFile << "\n";
     std::cout << "  Output file: " << outputFile << "\n";
 
-    LSBShuffleStegoHandler handler;
+    STEGOHANDLER handler;
     auto extractResult = handler.Extract(inputFile, outputFile, password);
     if (!extractResult) {
         std::cerr << "\nExtraction Failed\n";
