@@ -71,7 +71,7 @@ int CLI::HandleEmbedCommand(const cxxopts::ParseResult& parsedOptions) {
     std::string outputFile = "";
     if (!parsedOptions.count("output")){
 
-        outputFile = DEFAULTIMAGENAME;
+        outputFile = DEFAULT_IMAGE_NAME;
         std::cout << "Missing output file arguments for 'embed' command.\n";
         std::cout << "Using following name:  " << outputFile << " \n\n";
 
@@ -125,7 +125,7 @@ int CLI::HandleExtractCommand(const cxxopts::ParseResult& parsedOptions) {
     std::string outputFile = "";
     if (!parsedOptions.count("output")){
 
-        outputFile = DEFAULTTEXTNAME;
+        outputFile = DEFAULT_EXTRACTION_NAME;
         std::cout << "Missing output file arguments for 'extract' command.\n";
         std::cout << "Using following name:  " << outputFile << " \n\n";
 
@@ -217,23 +217,23 @@ void CLI::PrintExamples() {
 
 void CLI::PrintEmbedUsage() {
     std::cout << "Embed Usage:\n"
-              << "  stegtool embed -i <cover_image> -d <data_file> -o <output_image> [-p <password>]\n\n"
+              << "  stegtool embed -i <cover_image> -d <data_file> [-o <output_image>] [-p <password>]\n\n"
               << "  Required arguments:\n"
               << "    -i, --input <file>     Cover image (PNG format) to hide data in\n"
-              << "    -d, --data <file>      File containing data to hide\n"
-              << "    -o, --output <file>    Output stego image (PNG format)\n\n"
+              << "    -d, --data <file>      File containing data to hide\n\n"
               << "  Optional arguments:\n"
+              << "    -o, --output <file>    Output stego image ( defaults to \"" << DEFAULT_IMAGE_NAME << "\" if not provided)\n\n"
               << "    -p, --password <pass>  Password for encrypting the data (empty if not provided)\n";
 }
 
 void CLI::PrintExtractUsage() {
     std::cout << "Extract Usage:\n"
-              << "  stegtool extract -i <stego_image> -o <output_file> [-p <password>]\n\n"
+              << "  stegtool extract -i <stego_image> [-o <output_file>] [-p <password>]\n\n"
               << "  Required arguments:\n"
-              << "    -i, --input <file>     Stego image (PNG format) with hidden data\n"
-              << "    -o, --output <file>    Output file for extracted data\n\n"
+              << "    -i, --input <file>     Stego image (PNG format) with hidden data\n\n"
               << "  Optional arguments:\n"
-              << "    -p, --password <pass>  Password for decrypting the data (empty if not provided)\n";
+              << "    -o, --output <file>  Output file for extracted data ( defaults to \"" << DEFAULT_EXTRACTION_NAME << "\" if not provided)\n"
+              << "    -p, --password <pass>  Password for decrypting the data (empty if not provided)\n";;
 }
 
 bool CLI::ConfirmOverwrite(const std::string& inputFile, const std::string& outputFile) {

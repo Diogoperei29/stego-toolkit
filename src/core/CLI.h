@@ -5,8 +5,8 @@
 #include <string>
 #include <cxxopts.hpp>
 
-#define DEFAULTIMAGENAME "embedded-steno.png"
-#define DEFAULTTEXTNAME  "extracted.steno"
+#define DEFAULT_IMAGE_NAME "embedded-steno.png"
+#define DEFAULT_EXTRACTION_NAME  "extracted.steno"
 #define STEGOHANDLER LSBShuffleStegoHandler //meanwhile change handler type here 
 
 /**
