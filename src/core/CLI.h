@@ -5,6 +5,10 @@
 #include <string>
 #include <cxxopts.hpp>
 
+#define DEFAULTIMAGENAME "embedded-steno.png"
+#define DEFAULTTEXTNAME  "extracted.steno"
+#define STEGOHANDLER LSBShuffleStegoHandler //meanwhile change handler type here 
+
 /**
  * @brief Command-line interface handler for stegtool.
  *

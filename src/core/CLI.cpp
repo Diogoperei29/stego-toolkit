@@ -5,8 +5,6 @@
 #include <fstream>
 #include <filesystem>
 
-#define STEGOHANDLER LSBShuffleStegoHandler //meanwhile change handler type here 
-
 int CLI::Run(int argc, char *argv[]) {
     try {
         cxxopts::Options options = BuildCxxOptions();
@@ -63,16 +61,27 @@ int CLI::Run(int argc, char *argv[]) {
 }
 
 int CLI::HandleEmbedCommand(const cxxopts::ParseResult& parsedOptions) {
-    if (!parsedOptions.count("input") || !parsedOptions.count("data") || 
-        !parsedOptions.count("output")) {
+
+    if (!parsedOptions.count("input") || !parsedOptions.count("data") ) {
         std::cerr << "Error: Missing required arguments for 'embed' command.\n\n";
         PrintEmbedUsage();
         return 1;
     }
+    
+    std::string outputFile = "";
+    if (!parsedOptions.count("output")){
+
+        outputFile = DEFAULTIMAGENAME;
+        std::cout << "Missing output file arguments for 'embed' command.\n";
+        std::cout << "Using following name:  " << outputFile << " \n\n";
+
+    } else {
+        
+        outputFile = parsedOptions["output"].as<std::string>();
+    }
 
     std::string inputFile = parsedOptions["input"].as<std::string>();
     std::string dataFile = parsedOptions["data"].as<std::string>();
-    std::string outputFile = parsedOptions["output"].as<std::string>();
     std::string password = "";
     
     if (parsedOptions.count("password")) {
@@ -88,7 +97,7 @@ int CLI::HandleEmbedCommand(const cxxopts::ParseResult& parsedOptions) {
         return 0;
     }
 
-    std::cout << "Embedding data...\n";
+    std::cout << "\nEmbedding data...\n";
     std::cout << "  Cover image: " << inputFile << "\n";
     std::cout << "  Data file:   " << dataFile << "\n";
     std::cout << "  Output file: " << outputFile << "\n";
@@ -106,14 +115,26 @@ int CLI::HandleEmbedCommand(const cxxopts::ParseResult& parsedOptions) {
 }
 
 int CLI::HandleExtractCommand(const cxxopts::ParseResult& parsedOptions) {
-    if (!parsedOptions.count("input") || !parsedOptions.count("output")) {
+      
+    if (!parsedOptions.count("input")) {
         std::cerr << "Error: Missing required arguments for 'extract' command.\n\n";
         PrintExtractUsage();
         return 1;
     }
 
+    std::string outputFile = "";
+    if (!parsedOptions.count("output")){
+
+        outputFile = DEFAULTTEXTNAME;
+        std::cout << "Missing output file arguments for 'extract' command.\n";
+        std::cout << "Using following name:  " << outputFile << " \n\n";
+
+    } else {
+        
+        outputFile = parsedOptions["output"].as<std::string>();
+    }
+
     std::string inputFile = parsedOptions["input"].as<std::string>();
-    std::string outputFile = parsedOptions["output"].as<std::string>();
     std::string password = "";
     
     if (parsedOptions.count("password")) {
@@ -128,7 +149,7 @@ int CLI::HandleExtractCommand(const cxxopts::ParseResult& parsedOptions) {
         return 0;
     }
 
-    std::cout << "Extracting data...\n";
+    std::cout << "\nExtracting data...\n";
     std::cout << "  Stego image: " << inputFile << "\n";
     std::cout << "  Output file: " << outputFile << "\n";
 
