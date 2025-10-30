@@ -4,6 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <filesystem>
+#include <algorithm>
 #include <memory>
 #include <cctype>
 
@@ -114,27 +115,10 @@ int CLI::HandleEmbedCommand(const cxxopts::ParseResult& parsedOptions) {
     std::cout << "\nEmbedding data...\n";
     std::cout << "  Cover image: " << inputFile << "\n";
     std::cout << "  Data file:   " << dataFile << "\n";
-    std::cout << "  Method: " << (int) stegoMethod << " - " << methodArray[stegoMethod]  << "\n";
+    std::cout << "  Method: " << (int) stegoMethod << " - " << RetrieveEncodingMethod(stegoMethod)  << "\n";
     std::cout << "  Output file: " << outputFile << "\n";
 
-
-    //TODO: Check if it would be better to have a function handling the different classes for encription methods
-    std::unique_ptr<StegoHandler> handler;
-    
-    switch (stegoMethod)
-    {
-    case 0:
-        handler = std::make_unique<LSBStegoHandler>();
-        break;
-    case 1:
-        handler = std::make_unique<LSBShuffleStegoHandler>();
-        break;
-    
-    default:
-        handler = std::make_unique<LSBStegoHandler>();
-        std::cout << "Retrieving Encoding Method Function Error, Defaulted to simple LSB\n\n";
-        break;
-    }   
+    std::unique_ptr<StegoHandler> handler = ChooseHandlerMethod(stegoMethod);
     
     auto embedResult = handler->Embed(inputFile, dataFile, outputFile, password);
     if (!embedResult) {
@@ -192,25 +176,10 @@ int CLI::HandleExtractCommand(const cxxopts::ParseResult& parsedOptions) {
 
     std::cout << "\nExtracting data...\n";
     std::cout << "  Stego image: " << inputFile << "\n";
-    std::cout << "  Method: " << (int) stegoMethod << " - " << methodArray[stegoMethod]  << "\n";
+    std::cout << "  Method: " << (int) stegoMethod << " - " << RetrieveEncodingMethod(stegoMethod)  << "\n";
     std::cout << "  Output file: " << outputFile << "\n";
 
-    //TODO: Check if it would be better to have a function handling the different classes for encription methods
-    std::unique_ptr<StegoHandler> handler;
-    switch (stegoMethod)
-    {
-    case 0:
-        handler = std::make_unique<LSBStegoHandler>();
-        break;
-    case 1:
-        handler = std::make_unique<LSBShuffleStegoHandler>();
-        break;
-    
-    default:
-        handler = std::make_unique<LSBStegoHandler>();
-        std::cout << ", Defaulted to simple LSB\n\n";
-        break;
-    }   
+    std::unique_ptr<StegoHandler> handler = ChooseHandlerMethod(stegoMethod);
     
     auto extractResult = handler->Extract(inputFile, outputFile, password);
     if (!extractResult) {
@@ -223,24 +192,44 @@ int CLI::HandleExtractCommand(const cxxopts::ParseResult& parsedOptions) {
     return 0;
 }
 
+std::unique_ptr<StegoHandler> CLI::ChooseHandlerMethod (const int encodingMethod){
+    //the way i found to make it work, as std::move throws a warning and it is specified as error
+    switch (encodingMethod)
+    {
+    case steganographyMethod::LSB:
+        return std::unique_ptr<StegoHandler>(std::make_unique<LSBStegoHandler>());
+
+    case steganographyMethod::LSBShuffle:
+        return std::unique_ptr<StegoHandler>(std::make_unique<LSBShuffleStegoHandler>());
+    
+    default:
+        std::cout << "Retrieving Encoding Method Function Error, Defaulted to simple LSB\n\n";
+        break;
+    }   
+
+    return std::unique_ptr<StegoHandler>(std::make_unique<LSBStegoHandler>());
+}
+
 //TODO: Diogo pls check if is ok having this function overload here -joaoS
 std::string CLI::RetrieveEncodingMethod(const int encodingMethod){
 
     std::string method;
     
     switch (encodingMethod)
-    {
-    case steganographyMethod::LSB:
-        method = LSB_METHOD;
-        break;
-    case steganographyMethod::LSBShuffle:
-        method = LSB_SHUFFLE_METHOD;
-        break;
-    
-    default:
-        method = LSB_METHOD;
-        break;
-    }
+        {
+        case steganographyMethod::LSB:
+            method = LSB_METHOD;
+            break;
+        case steganographyMethod::LSBShuffle:
+            method = LSB_SHUFFLE_METHOD;
+            break;
+        default:
+            method = LSB_METHOD;
+            std::cout << "\nIncorrect number provided for Steganography method selection: \""<< (int) encodingMethod <<"\"\n";
+            std::cout << "Steganography method selection reverted to : " << (int)steganographyMethod::LSB 
+                << " - \""<< method << "\"\n\n";
+            break;
+        }
 
     return method;
 }
@@ -266,36 +255,27 @@ int CLI::RetrieveEncodingMethod(const std::string& encodingMethod){
         }
     }
 
-    int chosenMethod = 0;
+    std::string commandMethod = "";
     if(isInteger){
-
-        int integerMethod = std::stoi(encodingMethod);
-            switch (integerMethod)
-            {
-            case steganographyMethod::LSB:
-                chosenMethod = 0;
-                break;
-            case steganographyMethod::LSBShuffle:
-                chosenMethod = 1;
-                break;
-            default:
-                chosenMethod = 0;
-                std::cout << "\nIncorrect number provided for Steganography method selection: \""<< (int) integerMethod <<"\"\n";
-                std::cout << "Steganography method selection reverted to : " << (int)chosenMethod 
-                    << " - \""<< methodArray[chosenMethod] << "\"\n\n";
-                break;
-            }
-        return chosenMethod;
+        int tmp = (std::stoi(encodingMethod));
+        commandMethod = RetrieveEncodingMethod(tmp);
+    } else
+    {
+        commandMethod = encodingMethod;
     }
-
-    auto it = std::find(std::begin(methodArray), std::end(methodArray),encodingMethod);
-    if (it != std::end(methodArray)) {
-        chosenMethod = std::distance(methodArray, it);
-    } else {
+    
+    //convert text to lowercase 
+     std::transform(commandMethod.begin(), commandMethod.end(), commandMethod.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
+              
+    int chosenMethod = -1;               
+    if (commandMethod == LSB_METHOD)               { chosenMethod = 0; }
+    if (commandMethod == LSB_SHUFFLE_METHOD)       { chosenMethod = 1; }
+    if (chosenMethod == -1){
         chosenMethod = 0;
         std::cout << "\nIncorrect name provided for Steganography method selection: \""<< encodingMethod << "\"\n";
         std::cout << "Steganography method selection reverted to : " << (int)chosenMethod 
-            << " - \""<< methodArray[chosenMethod] << "\"\n\n";
+            << " - \""<< RetrieveEncodingMethod(chosenMethod) << "\"\n\n";
     }
     return chosenMethod;
 }

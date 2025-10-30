@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <cxxopts.hpp>
+#include "../algorithms/StegoHandler.h"
 
 #define DEFAULT_IMAGE_NAME "embedded-steno.png"
 #define DEFAULT_EXTRACTION_NAME  "extracted.steno"
@@ -15,11 +16,6 @@ typedef enum steganographyMethod{
     LSB = 0,
     LSBShuffle
 } steganographymethod;
-
-static const std::string methodArray[] = {
-        LSB_METHOD,
-        LSB_SHUFFLE_METHOD
-    };
 
 /**
  * @brief Command-line interface handler for stegtool.
@@ -51,6 +47,7 @@ private:
    static int HandleExtractCommand(const cxxopts::ParseResult& parsedOptions);
    static std::string RetrieveEncodingMethod(const int encodingMethod);
    static int RetrieveEncodingMethod(const std::string& encodingMethod);
+   static std::unique_ptr<StegoHandler> ChooseHandlerMethod (const int encodingMethod);
 };
 
 #endif // __STEGO_CLI_H_
