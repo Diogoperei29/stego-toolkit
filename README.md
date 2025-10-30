@@ -191,9 +191,9 @@ Steganography Methods Table:
 |               |             |                                |
 
 > [!WARNING]  
-> If you ommit or insert wrong Stego method option the program will revert to simple lsb method.
-> If you ommit output file the program will generate one with default name.
-> If an existing file has the same name, as a output file the program will ask to overwrite the file and wait for additional user input.
+> If you ommit or insert wrong Stego method option the program will revert to simple lsb method.\
+> If you ommit output file the program will generate one with default name.\
+> If an existing file has the same name as a output file the program will ask to overwrite the file and wait for additional user input.
 
 ### Global Options
 - `-h, --help` - Display help message
