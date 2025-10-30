@@ -4,6 +4,9 @@
 #include <iostream>
 #include <fstream>
 #include <filesystem>
+#include <memory>
+#include <cctype>
+
 
 int CLI::Run(int argc, char *argv[]) {
     try {
@@ -80,6 +83,17 @@ int CLI::HandleEmbedCommand(const cxxopts::ParseResult& parsedOptions) {
         outputFile = parsedOptions["output"].as<std::string>();
     }
 
+    uint stegoMethod;
+    if (!parsedOptions.count("method")){
+
+        stegoMethod =  0;
+        std::cout << "Missing method argument for 'embed' command.\n";
+        std::cout << "Using following method:  " << (int) stegoMethod << " \n\n";
+    } else{
+
+        stegoMethod = RetrieveEncodingMethod(parsedOptions["method"].as<std::string>());
+    }
+     
     std::string inputFile = parsedOptions["input"].as<std::string>();
     std::string dataFile = parsedOptions["data"].as<std::string>();
     std::string password = "";
@@ -100,10 +114,29 @@ int CLI::HandleEmbedCommand(const cxxopts::ParseResult& parsedOptions) {
     std::cout << "\nEmbedding data...\n";
     std::cout << "  Cover image: " << inputFile << "\n";
     std::cout << "  Data file:   " << dataFile << "\n";
+    std::cout << "  Method: " << (int) stegoMethod << " - " << methodArray[stegoMethod]  << "\n";
     std::cout << "  Output file: " << outputFile << "\n";
 
-    STEGOHANDLER handler;
-    auto embedResult = handler.Embed(inputFile, dataFile, outputFile, password);
+
+    //TODO: Check if it would be better to have a function handling the different classes for encription methods
+    std::unique_ptr<StegoHandler> handler;
+    
+    switch (stegoMethod)
+    {
+    case 0:
+        handler = std::make_unique<LSBShuffleStegoHandler>();
+        break;
+    case 1:
+        handler = std::make_unique<LSBShuffleStegoHandler>();
+        break;
+    
+    default:
+        handler = std::make_unique<LSBStegoHandler>();
+        std::cout << "Retrieving Encoding Method Function Error, Defaulted to simple LSB\n\n";
+        break;
+    }   
+    
+    auto embedResult = handler->Embed(inputFile, dataFile, outputFile, password);
     if (!embedResult) {
         std::cerr << "\nEmbedding Failed\n";
         std::cerr << "Error: " << embedResult.GetErrorMessage() << "\n";
@@ -134,6 +167,14 @@ int CLI::HandleExtractCommand(const cxxopts::ParseResult& parsedOptions) {
         outputFile = parsedOptions["output"].as<std::string>();
     }
 
+    uint8_t stegoMethod;
+    if (!parsedOptions.count("method"))
+    {
+        stegoMethod = (uint8_t) 0;
+    } else { 
+        stegoMethod = RetrieveEncodingMethod(parsedOptions["method"].as<std::string>());
+    }
+
     std::string inputFile = parsedOptions["input"].as<std::string>();
     std::string password = "";
     
@@ -151,10 +192,27 @@ int CLI::HandleExtractCommand(const cxxopts::ParseResult& parsedOptions) {
 
     std::cout << "\nExtracting data...\n";
     std::cout << "  Stego image: " << inputFile << "\n";
+    std::cout << "  Method: " << (int) stegoMethod << " - " << methodArray[stegoMethod]  << "\n";
     std::cout << "  Output file: " << outputFile << "\n";
 
-    STEGOHANDLER handler;
-    auto extractResult = handler.Extract(inputFile, outputFile, password);
+    //TODO: Check if it would be better to have a function handling the different classes for encription methods
+    std::unique_ptr<StegoHandler> handler;
+    switch (stegoMethod)
+    {
+    case 0:
+        handler = std::make_unique<LSBShuffleStegoHandler>();
+        break;
+    case 1:
+        handler = std::make_unique<LSBShuffleStegoHandler>();
+        break;
+    
+    default:
+        handler = std::make_unique<LSBStegoHandler>();
+        std::cout << ", Defaulted to simple LSB\n\n";
+        break;
+    }   
+    
+    auto extractResult = handler->Extract(inputFile, outputFile, password);
     if (!extractResult) {
         std::cerr << "\nExtraction Failed\n";
         std::cerr << "Error: " << extractResult.GetErrorMessage() << "\n";
@@ -164,7 +222,64 @@ int CLI::HandleExtractCommand(const cxxopts::ParseResult& parsedOptions) {
     std::cout << "\nData extracted successfully to " << outputFile << "\n";
     return 0;
 }
+//TODO: Diogo pls check if is ok having this function overload here -joao
+int CLI::RetrieveEncodingMethod(const int encodingMethod){
+    int chosenMethod = 0;
+        switch (encodingMethod)
+        {
+        case stenographyMethod::LSB:
+            chosenMethod = 0;
+            break;
+        case stenographyMethod::LSBShuffle:
+            chosenMethod = 1;
+            break;
+        default:
+            chosenMethod = 0;
+            std::cout << "\nIncorrect number provided for stenography method selection: \""<< (int) encodingMethod <<"\"\n";
+            std::cout << "Stenography method selection reverted to : " << (int)chosenMethod 
+                << " - \""<< methodArray[chosenMethod] << "\"\n\n";
+            break;
+        }
+    return chosenMethod;
+}
 
+int CLI::RetrieveEncodingMethod(const std::string& encodingMethod){
+    int chosenMethod = 0;
+    std::uint8_t isInteger = true;
+
+    if (encodingMethod.empty()){ 
+        return 0;
+    }
+
+    size_t start = 0;
+    // Handle optional sign
+    if (encodingMethod[0] == '-' || encodingMethod[0] == '+') {
+        if (encodingMethod.size() == 1) return false; // Only a sign, no digits
+        start = 1;
+    }
+
+    // Check each character
+    for (size_t i = start; i < encodingMethod.size(); ++i) {
+        if (!std::isdigit(encodingMethod[i])){
+            isInteger = false;
+        }
+    }
+
+    if(isInteger){
+        return RetrieveEncodingMethod(std::stoi(encodingMethod));
+    }
+
+    auto it = std::find(std::begin(methodArray), std::end(methodArray),encodingMethod);
+    if (it != std::end(methodArray)) {
+        chosenMethod = std::distance(methodArray, it);
+    } else {
+        chosenMethod = 0;
+        std::cout << "\nIncorrect name provided for stenography method selection: \""<< encodingMethod << "\"\n";
+        std::cout << "Stenography method selection reverted to : " << (int)chosenMethod 
+            << " - \""<< methodArray[chosenMethod] << "\"\n\n";
+    }
+    return chosenMethod;
+}
 
 cxxopts::Options CLI::BuildCxxOptions()
 {
@@ -179,6 +294,7 @@ cxxopts::Options CLI::BuildCxxOptions()
     // Add subcommand options
     options.add_options("Embed")
         ("embed", "Embed data into an image")
+        ("m,method", "Stenography method selection", cxxopts::value<std::string>())
         ("i,input", "Input cover image file (PNG format)", cxxopts::value<std::string>())
         ("d,data", "Data file to hide in the image", cxxopts::value<std::string>())
         ("o,output", "Output stego image file", cxxopts::value<std::string>())

@@ -7,7 +7,19 @@
 
 #define DEFAULT_IMAGE_NAME "embedded-steno.png"
 #define DEFAULT_EXTRACTION_NAME  "extracted.steno"
-#define STEGOHANDLER LSBShuffleStegoHandler //meanwhile change handler type here 
+
+#define LSB_METHOD "lsb"
+#define LSB_SHUFFLE_METHOD "lsbshuffle"
+
+typedef enum stenographyMethod{
+    LSB = 0,
+    LSBShuffle
+} stenographymethod;
+
+static const std::string methodArray[] = {
+        LSB_METHOD,
+        LSB_SHUFFLE_METHOD
+    };
 
 /**
  * @brief Command-line interface handler for stegtool.
@@ -37,6 +49,8 @@ private:
    static bool ConfirmOverwrite(const std::string& inputFile, const std::string& outputFile);
    static int HandleEmbedCommand(const cxxopts::ParseResult& parsedOptions);
    static int HandleExtractCommand(const cxxopts::ParseResult& parsedOptions);
+   static int RetrieveEncodingMethod(const int encodingMethod);
+   static int RetrieveEncodingMethod(const std::string& encodingMethod);
 };
 
 #endif // __STEGO_CLI_H_
