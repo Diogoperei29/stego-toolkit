@@ -124,7 +124,7 @@ int CLI::HandleEmbedCommand(const cxxopts::ParseResult& parsedOptions) {
     switch (stegoMethod)
     {
     case 0:
-        handler = std::make_unique<LSBShuffleStegoHandler>();
+        handler = std::make_unique<LSBStegoHandler>();
         break;
     case 1:
         handler = std::make_unique<LSBShuffleStegoHandler>();
@@ -200,7 +200,7 @@ int CLI::HandleExtractCommand(const cxxopts::ParseResult& parsedOptions) {
     switch (stegoMethod)
     {
     case 0:
-        handler = std::make_unique<LSBShuffleStegoHandler>();
+        handler = std::make_unique<LSBStegoHandler>();
         break;
     case 1:
         handler = std::make_unique<LSBShuffleStegoHandler>();
@@ -222,36 +222,36 @@ int CLI::HandleExtractCommand(const cxxopts::ParseResult& parsedOptions) {
     std::cout << "\nData extracted successfully to " << outputFile << "\n";
     return 0;
 }
-//TODO: Diogo pls check if is ok having this function overload here -joao
-int CLI::RetrieveEncodingMethod(const int encodingMethod){
-    int chosenMethod = 0;
-        switch (encodingMethod)
-        {
-        case steganographyMethod::LSB:
-            chosenMethod = 0;
-            break;
-        case steganographyMethod::LSBShuffle:
-            chosenMethod = 1;
-            break;
-        default:
-            chosenMethod = 0;
-            std::cout << "\nIncorrect number provided for Steganography method selection: \""<< (int) encodingMethod <<"\"\n";
-            std::cout << "Steganography method selection reverted to : " << (int)chosenMethod 
-                << " - \""<< methodArray[chosenMethod] << "\"\n\n";
-            break;
-        }
-    return chosenMethod;
+
+//TODO: Diogo pls check if is ok having this function overload here -joaoS
+std::string CLI::RetrieveEncodingMethod(const int encodingMethod){
+
+    std::string method;
+    
+    switch (encodingMethod)
+    {
+    case steganographyMethod::LSB:
+        method = LSB_METHOD;
+        break;
+    case steganographyMethod::LSBShuffle:
+        method = LSB_SHUFFLE_METHOD;
+        break;
+    
+    default:
+        method = LSB_METHOD;
+        break;
+    }
+
+    return method;
 }
 
 int CLI::RetrieveEncodingMethod(const std::string& encodingMethod){
-    int chosenMethod = 0;
-    std::uint8_t isInteger = true;
-
-    if (encodingMethod.empty()){ 
+    
+     if (encodingMethod.empty()){ 
         return 0;
     }
 
-    size_t start = 0;
+    std::uint8_t start = 0;
     // Handle optional sign
     if (encodingMethod[0] == '-' || encodingMethod[0] == '+') {
         if (encodingMethod.size() == 1) return false; // Only a sign, no digits
@@ -259,14 +259,33 @@ int CLI::RetrieveEncodingMethod(const std::string& encodingMethod){
     }
 
     // Check each character
+    bool isInteger = true;
     for (size_t i = start; i < encodingMethod.size(); ++i) {
         if (!std::isdigit(encodingMethod[i])){
             isInteger = false;
         }
     }
 
+    int chosenMethod = 0;
     if(isInteger){
-        return RetrieveEncodingMethod(std::stoi(encodingMethod));
+
+        int integerMethod = std::stoi(encodingMethod);
+            switch (integerMethod)
+            {
+            case steganographyMethod::LSB:
+                chosenMethod = 0;
+                break;
+            case steganographyMethod::LSBShuffle:
+                chosenMethod = 1;
+                break;
+            default:
+                chosenMethod = 0;
+                std::cout << "\nIncorrect number provided for Steganography method selection: \""<< (int) integerMethod <<"\"\n";
+                std::cout << "Steganography method selection reverted to : " << (int)chosenMethod 
+                    << " - \""<< methodArray[chosenMethod] << "\"\n\n";
+                break;
+            }
+        return chosenMethod;
     }
 
     auto it = std::find(std::begin(methodArray), std::end(methodArray),encodingMethod);

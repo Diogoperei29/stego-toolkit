@@ -40,6 +40,7 @@ public:
                      const std::string &password) override;
 
     static constexpr uint32_t HEADER_SIZE_BITS = 32;
+    static constexpr uint32_t HEADER_SIZE_BYTES = 4;
     static constexpr uint32_t MAX_REASONABLE_SIZE = 100 * 1024 * 1024; // 100MB sanity check
     
     /**
@@ -79,7 +80,8 @@ public:
      * @return Result indicating success or embedding error
      */
     Result<> EmbedLSB(std::vector<uint8_t> &pixels,
-                      const std::vector<uint8_t> &dataToEmbed);
+                      const std::vector<uint8_t> &dataToEmbed,
+                      const std::string &password );
     
     /**
      * @brief Extracts data from pixel array using LSB technique.
@@ -87,7 +89,8 @@ public:
      * @param pixels Pixel data to read from
      * @return Result containing extracted data or error
      */
-    Result<std::vector<uint8_t>> ExtractLSB(const std::vector<uint8_t> &pixels);
+    Result<std::vector<uint8_t>> ExtractLSB(const std::vector<uint8_t> &pixels,
+                                            const std::string &password );
 
     ~LSBShuffleStegoHandler() override = default;
 

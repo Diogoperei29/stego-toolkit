@@ -49,7 +49,7 @@ private:
    static bool ConfirmOverwrite(const std::string& inputFile, const std::string& outputFile);
    static int HandleEmbedCommand(const cxxopts::ParseResult& parsedOptions);
    static int HandleExtractCommand(const cxxopts::ParseResult& parsedOptions);
-   static int RetrieveEncodingMethod(const int encodingMethod);
+   static std::string RetrieveEncodingMethod(const int encodingMethod);
    static int RetrieveEncodingMethod(const std::string& encodingMethod);
 };
 

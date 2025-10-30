@@ -95,7 +95,7 @@ Result<> LSBShuffleStegoHandler::Embed(const std::string &coverFile,
     }
 
     // Embed data into image
-    auto embedResult = EmbedLSB(imageData.pixels, encryptedData);
+    auto embedResult = EmbedLSB(imageData.pixels, encryptedData, password);
     if (!embedResult) {
         return embedResult;
     }
@@ -131,7 +131,7 @@ Result<> LSBShuffleStegoHandler::Extract(const std::string &stegoFile,
     }
 
     // Extract encrypted data
-    auto extractResult = ExtractLSB(pixels);
+    auto extractResult = ExtractLSB(pixels, password);
     if (!extractResult) {
         return Result<>(
             extractResult.GetErrorCode(),
@@ -175,57 +175,78 @@ Result<> LSBShuffleStegoHandler::Extract(const std::string &stegoFile,
 }
 
 Result<> LSBShuffleStegoHandler::EmbedLSB(std::vector<uint8_t> &pixels,
-                                    const std::vector<uint8_t> &dataToEmbed) {
+                                        const std::vector<uint8_t> &dataToEmbed,
+                                        const std::string &password) {
     
     if (dataToEmbed.empty()) {
         return Result<>(ErrorCode::InvalidArgument, "Cannot embed empty data");
     }
     
     uint32_t dataSize = static_cast<uint32_t>(dataToEmbed.size());
-    
-    if (dataSize * 8 + HEADER_SIZE_BITS > pixels.size()) {
+    uint64_t binarySize = (dataSize * 8) + HEADER_SIZE_BITS;
+    std::size_t imgSize = pixels.size();
+
+    if ( binarySize > imgSize) {
         std::ostringstream oss;
         oss << "Internal error: Data size " << dataSize << " bytes exceeds available capacity";
         return Result<>(ErrorCode::EmbeddingFailed, oss.str());
     }
 
-    // Embed size header
-    for (std::size_t idx = 0; idx < HEADER_SIZE_BITS; ++idx) {
-        uint8_t bit = (dataSize >> idx) & 1;
-        pixels[idx] = ((pixels[idx] & 0xFE) | bit);
-    }
-
-    //start shuffling
-    std::size_t seed = dataSize * pixels.size();
+    //start shuffling img bit locations
+    std::size_t seed = std::hash<std::string>{}(password);
     std::mt19937_64 shuffler(seed);
-    std::size_t bitDataSize = dataSize * 8;
-    std::vector<std::size_t> dataBitOrderList(bitDataSize);
 
-    for (std::size_t i = 0; i < bitDataSize; ++i) {
-        dataBitOrderList[i] = i;
+    std::vector<std::size_t> imgBitLocationList(imgSize);
+    for (std::size_t i = 0; i < imgSize; ++i) {
+        imgBitLocationList[i] = i;
     }
-
-    std::shuffle(dataBitOrderList.begin(), dataBitOrderList.end(), shuffler);
+    std::shuffle(imgBitLocationList.begin(), imgBitLocationList.end(), shuffler);
     
-       // Embed data bits
-    for (std::size_t byteIdx = 0; byteIdx < dataSize; ++byteIdx) {
+    std::vector<std::size_t> dataVector(binarySize);
+    dataVector.insert(dataVector.begin(), {           //store datasize LSB first to simplify reading
+        static_cast<uint8_t>(dataSize         & 0xFF),
+        static_cast<uint8_t>((dataSize >>  8) & 0xFF),
+        static_cast<uint8_t>((dataSize >> 16) & 0xFF),
+        static_cast<uint8_t>((dataSize >> 24) & 0xFF)
+    });
+
+    dataVector.insert((dataVector.begin() + HEADER_SIZE_BYTES), dataToEmbed.begin(), dataToEmbed.end());
+    
+    // Embed data bits
+    for (std::size_t byteIdx = 0; byteIdx < (dataSize + HEADER_SIZE_BYTES); ++byteIdx) {
         for (uint8_t bitIdx = 0; bitIdx < 8; ++bitIdx) {
-            size_t bitIndex = (byteIdx * 8) + bitIdx;              //grab location of bit in file
-            uint8_t bit = (dataToEmbed[byteIdx] >> bitIdx) & 1;     
-            std::size_t pixelIdx = HEADER_SIZE_BITS + dataBitOrderList[bitIndex]; //new location is based on shuffled locationlist
-            pixels[pixelIdx] = ((pixels[pixelIdx] & 0xFE) | bit );
-        }
+            size_t bitIndex = (byteIdx * 8) + bitIdx;           //get location of bit
+            uint8_t bit = (dataVector[byteIdx] >> bitIdx) & 1; //fetch data from linear data location 
+            pixels[imgBitLocationList[bitIndex]] = (pixels[imgBitLocationList[bitIndex]] & 0xFE) | bit; // insert data on shuffled pixel location
+        }   
     }
 
     return Result<>();
 }
 
-Result<std::vector<uint8_t>> LSBShuffleStegoHandler::ExtractLSB(const std::vector<uint8_t> &pixels) {
+Result<std::vector<uint8_t>> LSBShuffleStegoHandler::ExtractLSB(const std::vector<uint8_t> &pixels, 
+                                                                const std::string &password) {
     
     // Extract size header
     uint32_t dataSize = 0;
-    for (std::size_t idx = 0; idx < HEADER_SIZE_BITS; ++idx) {
-        dataSize |= ((pixels[idx] & 1) << idx);
+    std::size_t imgSize = pixels.size();
+
+    //start shuffling pixel list
+    std::size_t seed = std::hash<std::string>{}(password);
+    std::mt19937_64 shuffler(seed);
+    
+    std::vector<std::size_t> imgBitLocationList(imgSize);
+    for (std::size_t i = 0; i < imgSize; ++i) {
+        imgBitLocationList[i] = i;
+    }
+    std::shuffle(imgBitLocationList.begin(), imgBitLocationList.end(), shuffler);
+    
+    // Extract img datasize bits in reverse 1st is msb
+    for (std::size_t byteIdx = 0; byteIdx < HEADER_SIZE_BYTES; ++byteIdx) {
+        for (uint8_t bitIdx = 0; bitIdx < 8; ++bitIdx) {
+            size_t bitIndex = (byteIdx * 8) + bitIdx;           //get location of bit
+            dataSize |= (pixels[imgBitLocationList[bitIndex]] & 1) << bitIndex; // insert data on shuffled pixel location
+        }   
     }
 
     // Validate size
@@ -258,26 +279,12 @@ Result<std::vector<uint8_t>> LSBShuffleStegoHandler::ExtractLSB(const std::vecto
         );
     }
     
-    //start unshuffling
-    std::size_t seed = dataSize * pixels.size();
-    std::mt19937_64 shuffler(seed);
-    std::size_t bitDataSize = dataSize * 8;
-    std::vector<std::size_t> dataBitOrderList(bitDataSize);
-
-    for (std::size_t i = 0; i < bitDataSize; ++i) {
-        dataBitOrderList[i] = i;
-    }
-
-    std::shuffle(dataBitOrderList.begin(), dataBitOrderList.end(), shuffler);
-
-    // Extract data bits
+    // Extract the data bits
     std::vector<uint8_t> extractedData(dataSize, 0);
-    
-    for (std::size_t byteIdx = 0; byteIdx < dataSize; ++byteIdx) {
+    for (std::size_t byteIdx = 0; byteIdx < dataSize ; ++byteIdx) {
         for (uint8_t bitIdx = 0; bitIdx < 8; ++bitIdx) {
-            size_t bitIndex = (byteIdx * 8) + bitIdx;  
-            std::size_t pixelIdx = HEADER_SIZE_BITS + dataBitOrderList[bitIndex]; //retrieve location based on locationlist
-            uint8_t bit = (pixels[pixelIdx] & 1);
+            size_t bitIndex = ((byteIdx + HEADER_SIZE_BYTES) * 8) + bitIdx; //provide offset from HEADER location
+            uint8_t bit = (pixels[imgBitLocationList[bitIndex]] & 1); //retrieve location based on locationlist
             extractedData[byteIdx] |= (bit << bitIdx);
         }
     }
