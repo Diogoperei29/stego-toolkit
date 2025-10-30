@@ -227,16 +227,16 @@ int CLI::RetrieveEncodingMethod(const int encodingMethod){
     int chosenMethod = 0;
         switch (encodingMethod)
         {
-        case stenographyMethod::LSB:
+        case steganographyMethod::LSB:
             chosenMethod = 0;
             break;
-        case stenographyMethod::LSBShuffle:
+        case steganographyMethod::LSBShuffle:
             chosenMethod = 1;
             break;
         default:
             chosenMethod = 0;
-            std::cout << "\nIncorrect number provided for stenography method selection: \""<< (int) encodingMethod <<"\"\n";
-            std::cout << "Stenography method selection reverted to : " << (int)chosenMethod 
+            std::cout << "\nIncorrect number provided for Steganography method selection: \""<< (int) encodingMethod <<"\"\n";
+            std::cout << "Steganography method selection reverted to : " << (int)chosenMethod 
                 << " - \""<< methodArray[chosenMethod] << "\"\n\n";
             break;
         }
@@ -274,8 +274,8 @@ int CLI::RetrieveEncodingMethod(const std::string& encodingMethod){
         chosenMethod = std::distance(methodArray, it);
     } else {
         chosenMethod = 0;
-        std::cout << "\nIncorrect name provided for stenography method selection: \""<< encodingMethod << "\"\n";
-        std::cout << "Stenography method selection reverted to : " << (int)chosenMethod 
+        std::cout << "\nIncorrect name provided for Steganography method selection: \""<< encodingMethod << "\"\n";
+        std::cout << "Steganography method selection reverted to : " << (int)chosenMethod 
             << " - \""<< methodArray[chosenMethod] << "\"\n\n";
     }
     return chosenMethod;
@@ -294,15 +294,16 @@ cxxopts::Options CLI::BuildCxxOptions()
     // Add subcommand options
     options.add_options("Embed")
         ("embed", "Embed data into an image")
-        ("m,method", "Stenography method selection", cxxopts::value<std::string>())
         ("i,input", "Input cover image file (PNG format)", cxxopts::value<std::string>())
         ("d,data", "Data file to hide in the image", cxxopts::value<std::string>())
+        ("m,method", "Steganography method selection", cxxopts::value<std::string>())
         ("o,output", "Output stego image file", cxxopts::value<std::string>())
         ("p,password", "Password for encryption", cxxopts::value<std::string>());
 
     options.add_options("Extract")
         ("extract", "Extract data from an image")
         ("I,input-stego", "Input stego image file", cxxopts::value<std::string>())
+        ("M,method-stego", "Steganography method selection", cxxopts::value<std::string>())
         ("O,output-data", "Output file for extracted data", cxxopts::value<std::string>())
         ("P,password-extract", "Password for decryption", cxxopts::value<std::string>());
 
@@ -326,28 +327,30 @@ void CLI::PrintDescription() {
 void CLI::PrintExamples() {
     std::cout << "Examples:\n"
               << "  Embed a secret message:\n"
-              << "    stegtool embed -i cover.png -d secret.txt -o stego.png -p mypassword\n\n"
+              << "    stegtool embed -i cover.png -d secret.txt -m lsb -o stego.png -p mypassword\n\n"
               << "  Extract the hidden message:\n"
-              << "    stegtool extract -i stego.png -o recovered.txt -p mypassword\n\n";
+              << "    stegtool extract -i stego.png -m lsb -o recovered.txt -p mypassword\n\n";
 }
 
 void CLI::PrintEmbedUsage() {
     std::cout << "Embed Usage:\n"
-              << "  stegtool embed -i <cover_image> -d <data_file> [-o <output_image>] [-p <password>]\n\n"
+              << "  stegtool embed -i <cover_image> -d <data_file> [-m <stego_method>] [-o <output_image>] [-p <password>]\n\n"
               << "  Required arguments:\n"
               << "    -i, --input <file>     Cover image (PNG format) to hide data in\n"
               << "    -d, --data <file>      File containing data to hide\n\n"
               << "  Optional arguments:\n"
+              << "    -m, --method <method>  Steganography method used to imprint data ( defaults to \"" << LSB_METHOD << "\" if not provided)\n"
               << "    -o, --output <file>    Output stego image ( defaults to \"" << DEFAULT_IMAGE_NAME << "\" if not provided)\n\n"
               << "    -p, --password <pass>  Password for encrypting the data (empty if not provided)\n";
 }
 
 void CLI::PrintExtractUsage() {
     std::cout << "Extract Usage:\n"
-              << "  stegtool extract -i <stego_image> [-o <output_file>] [-p <password>]\n\n"
+              << "  stegtool extract -i <stego_image> [-m <stego_method>] [-o <output_file>] [-p <password>]\n\n"
               << "  Required arguments:\n"
               << "    -i, --input <file>     Stego image (PNG format) with hidden data\n\n"
               << "  Optional arguments:\n"
+              << "    -m, --method <method>  Steganography method used to extract data ( defaults to \"" << LSB_METHOD << "\" if not provided)\n"
               << "    -o, --output <file>  Output file for extracted data ( defaults to \"" << DEFAULT_EXTRACTION_NAME << "\" if not provided)\n"
               << "    -p, --password <pass>  Password for decrypting the data (empty if not provided)\n";;
 }

@@ -11,10 +11,10 @@
 #define LSB_METHOD "lsb"
 #define LSB_SHUFFLE_METHOD "lsbshuffle"
 
-typedef enum stenographyMethod{
+typedef enum steganographyMethod{
     LSB = 0,
     LSBShuffle
-} stenographymethod;
+} steganographymethod;
 
 static const std::string methodArray[] = {
         LSB_METHOD,
