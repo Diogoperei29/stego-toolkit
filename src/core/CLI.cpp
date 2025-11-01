@@ -84,13 +84,13 @@ int CLI::HandleEmbedCommand(const cxxopts::ParseResult& parsedOptions) {
         outputFile = parsedOptions["output"].as<std::string>();
     }
 
-    uint stegoMethod;
+    int stegoMethod;
     if (!parsedOptions.count("method")){
 
         stegoMethod =  0;
         std::cout << "Missing method argument for 'embed' command.\n";
         std::cout << "Using following method:  " << (int) stegoMethod << " \n\n";
-    } else{
+    } else {
 
         stegoMethod = RetrieveEncodingMethod(parsedOptions["method"].as<std::string>());
     }
