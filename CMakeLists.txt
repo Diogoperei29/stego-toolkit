@@ -60,6 +60,7 @@ set(LIB_SOURCES
   src/utils/ErrorHandler.cpp
   src/utils/ImageIO.cpp
   src/algorithms/lsb/LSBStegoHandler.cpp
+  src/algorithms/lsbshuffle/LSBShuffleStegoHandler.cpp
 )
 
 set(LIB_HEADERS
@@ -69,6 +70,7 @@ set(LIB_HEADERS
   src/utils/ErrorHandler.h
   src/utils/ImageIO.h
   src/algorithms/lsb/LSBStegoHandler.h
+  src/algorithms/lsbshuffle/LSBShuffleStegoHandler.h
 )
 
 # StegTool library

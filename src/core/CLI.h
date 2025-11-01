@@ -4,6 +4,18 @@
 #include <vector>
 #include <string>
 #include <cxxopts.hpp>
+#include "../algorithms/StegoHandler.h"
+
+#define DEFAULT_IMAGE_NAME "embedded-steno.png"
+#define DEFAULT_EXTRACTION_NAME  "extracted.steno"
+
+#define LSB_METHOD "lsb"
+#define LSB_SHUFFLE_METHOD "lsbshuffle"
+
+typedef enum {
+   LSB = 0,
+   LSBShuffle
+} StegoMethod;
 
 /**
  * @brief Command-line interface handler for stegtool.
@@ -33,6 +45,9 @@ private:
    static bool ConfirmOverwrite(const std::string& inputFile, const std::string& outputFile);
    static int HandleEmbedCommand(const cxxopts::ParseResult& parsedOptions);
    static int HandleExtractCommand(const cxxopts::ParseResult& parsedOptions);
+   static std::string StegoMethodToString(StegoMethod method);
+   static StegoMethod ParseStegoMethod(const std::string& methodStr);
+   static std::unique_ptr<StegoHandler> ChooseHandlerMethod(StegoMethod method);
 };
 
 #endif // __STEGO_CLI_H_
