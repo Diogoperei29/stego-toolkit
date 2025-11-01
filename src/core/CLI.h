@@ -12,10 +12,10 @@
 #define LSB_METHOD "lsb"
 #define LSB_SHUFFLE_METHOD "lsbshuffle"
 
-typedef enum steganographyMethod{
-    LSB = 0,
-    LSBShuffle
-} steganographymethod;
+typedef enum {
+   LSB = 0,
+   LSBShuffle
+} StegoMethod;
 
 /**
  * @brief Command-line interface handler for stegtool.
@@ -45,9 +45,9 @@ private:
    static bool ConfirmOverwrite(const std::string& inputFile, const std::string& outputFile);
    static int HandleEmbedCommand(const cxxopts::ParseResult& parsedOptions);
    static int HandleExtractCommand(const cxxopts::ParseResult& parsedOptions);
-   static std::string RetrieveEncodingMethod(const int encodingMethod);
-   static int RetrieveEncodingMethod(const std::string& encodingMethod);
-   static std::unique_ptr<StegoHandler> ChooseHandlerMethod (const int encodingMethod);
+   static std::string StegoMethodToString(StegoMethod method);
+   static StegoMethod ParseStegoMethod(const std::string& methodStr);
+   static std::unique_ptr<StegoHandler> ChooseHandlerMethod(StegoMethod method);
 };
 
 #endif // __STEGO_CLI_H_
