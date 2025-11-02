@@ -5,11 +5,12 @@
 #include "../../utils/ImageIO.h"
 
 /**
- * @brief Implements LSB (Least Significant Bit) steganography for images.
+ * @brief Implements LSB (Least Significant Bit) steganography for images with password-based pixel shuffling.
  *
  * This handler embeds and extracts data into/from images by modifying
- * the least significant bit of each pixel value. The data is encrypted
- * with AES-256-CBC before embedding for security.
+ * the least significant bit of each pixel value. Before embedding, the pixel order is shuffled
+ * using a pseudorandom sequence derived from the provided password, making extraction dependent
+ * on the correct password. The data is also encrypted with AES-256-CBC before embedding for security.
  */
 class LSBShuffleStegoHandler : public StegoHandler {
 public:
