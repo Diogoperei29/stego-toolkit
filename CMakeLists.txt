@@ -55,7 +55,7 @@ endif()
 
 # Create a library for the core functionality (used by both main and tests)
 set(LIB_SOURCES
-  src/algorithms/StegoHandler.h
+  src/algorithms/StegoHandler.cpp
   src/core/CLI.cpp
   src/utils/CryptoModule.cpp
   src/utils/ErrorHandler.cpp
