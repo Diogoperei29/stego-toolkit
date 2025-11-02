@@ -113,8 +113,11 @@ stegtool/
 │   └── algorithms/                   # Steganography algorithms
 │       ├── StegoHandler.h            # Abstract base class
 │       └── lsb/                      # LSB implementation
-│           ├── LSBStegoHandler.h
-│           └── LSBStegoHandler.cpp
+│       |   ├── LSBStegoHandler.h
+│       |   └── LSBStegoHandler.cpp
+│       └── lsbshuffle/               # LSB Shuffled implementation
+│           ├── LSBShuffleStegoHandler.h
+│           └── LSBShuffleStegoHandler.cpp
 ├── tests/
 │   └── test_all.cpp                  # Unit tests (Google Test)
 ├── CMakeLists.txt                    # Build configuration
@@ -148,26 +151,49 @@ The project uses the following libraries, automatically fetched via CMake FetchC
 
 **`embed`** - Hide data inside an image
 ```bash
-stegtool embed -i <cover_image> -d <data_file> -o <output_image> -p <password>
+stegtool embed -i <cover_image> -d <data_file> -m <stego_method> -o <output_image> -p <password>
 
 Options:
   -i, --input     Input cover image (PNG/BMP/JPEG)
   -d, --data      Data file to hide
+  -m, --method    Steganography method selection
   -o, --output    Output stego image
   -p, --password  Password for encryption
 ```
 
 **`extract`** - Extract hidden data from an image
 ```bash
-stegtool extract -i <stego_image> -o <output_file> -p <password>
+stegtool extract -i <stego_image> -m <stego_method> -o <output_file> -p <password>
 
 Options:
   -i, --input     Input stego image
+  -m, --method    Steganography method selection
   -o, --output    Output file for extracted data
   -p, --password  Password for decryption
 ```
+### Steganography Method Selection
+Usage example:
+**`lsb`** - Hide data inside an image using lsb - least significant bit method
+```bash
+stegtool embed -i <cover_image> -d <data_file> -m lsb -o <output_image> -p <password>
+
+```
+Methods can be used by name or number:
+```bash
+stegtool embed -i <cover_image> -d <data_file> -m 0 -o <output_image> -p <password>
+
+```
+Steganography Methods Table:
+| Method Number | Method Name | Method Description             |
+|---------------|-------------|--------------------------------|
+| 0             | lsb         | least significant bit          |
+| 1             | lsbshuffle  | Shuffled least significant bit |
+|               |             |                                |
+
 > [!WARNING]  
-> If you ommit output file or use the same name, the program will ask to overwrite the file and wait for additional user input.
+> If you omit or insert wrong Stego method option the program will revert to simple lsb method.\
+> If you omit output file the program will generate one with default name.\
+> If an existing file has the same name as a output file the program will ask to overwrite the file and wait for additional user input.
 
 ### Global Options
 - `-h, --help` - Display help message
@@ -177,7 +203,6 @@ Options:
 ## To-Do
 
 - Research more algorithms and implement them (add as issues first please)
-- Add algorithm selector to CLI once more algorithms are implemented
 - Add a release builder on github actions
 - Change integration tests to run on all algorithms
 
