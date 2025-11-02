@@ -10,7 +10,7 @@
 
 namespace fs = std::filesystem;
 
-// Parameterized test fixture for embed/extract tests - need factory function cuz unique_ptr is non copiable
+// Parameterized test fixture for embed/extract tests - need factory function because unique_ptr is non copiable
 class EmbedExtractTest : public ::testing::TestWithParam<std::function<std::unique_ptr<StegoHandler>()>> { 
 protected:
     void SetUp() override {
