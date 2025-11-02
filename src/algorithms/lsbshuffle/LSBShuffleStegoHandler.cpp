@@ -202,15 +202,14 @@ Result<> LSBShuffleStegoHandler::EmbedLSB(std::vector<uint8_t> &pixels,
     }
     std::shuffle(imgBitLocationList.begin(), imgBitLocationList.end(), shuffler);
     
-    std::vector<std::size_t> dataVector(binarySize);
-    dataVector.insert(dataVector.begin(), {           //store datasize LSB first to simplify reading
-        static_cast<uint8_t>(dataSize         & 0xFF),
-        static_cast<uint8_t>((dataSize >>  8) & 0xFF),
-        static_cast<uint8_t>((dataSize >> 16) & 0xFF),
-        static_cast<uint8_t>((dataSize >> 24) & 0xFF)
-    });
-
-    dataVector.insert((dataVector.begin() + HEADER_SIZE_BYTES), dataToEmbed.begin(), dataToEmbed.end());
+    std::vector<uint8_t> dataVector(binarySize);
+    // Store datasize LSB first to simplify reading
+    dataVector[0] = static_cast<uint8_t>(dataSize         & 0xFF);
+    dataVector[1] = static_cast<uint8_t>((dataSize >>  8) & 0xFF);
+    dataVector[2] = static_cast<uint8_t>((dataSize >> 16) & 0xFF);
+    dataVector[3] = static_cast<uint8_t>((dataSize >> 24) & 0xFF);
+    // Copy dataToEmbed into dataVector after header
+    std::copy(dataToEmbed.begin(), dataToEmbed.end(), dataVector.begin() + HEADER_SIZE_BYTES);
     
     // Embed data bits
     for (std::size_t byteIdx = 0; byteIdx < (dataSize + HEADER_SIZE_BYTES); ++byteIdx) {
