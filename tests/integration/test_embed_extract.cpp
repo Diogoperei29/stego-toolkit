@@ -152,8 +152,8 @@ TEST_P(EmbedExtractTest, GrayscaleVsRGBCapacity) {
     auto rgbImage = ImageIO::Load(TestHelpers::GetFixturePath("small_rgb.png").string());
     ASSERT_TRUE(rgbImage.IsSuccess());
     
-    auto grayCapacity = LSBStegoHandler::CalculateLSBCapacity(grayImage.GetValue());
-    auto rgbCapacity = LSBStegoHandler::CalculateLSBCapacity(rgbImage.GetValue());
+    auto grayCapacity = LSBStegoHandler::CalculateCapacity(grayImage.GetValue(), LSBStegoHandler::HEADER_SIZE_BITS);
+    auto rgbCapacity = LSBStegoHandler::CalculateCapacity(rgbImage.GetValue(), LSBStegoHandler::HEADER_SIZE_BITS);
     
     // RGB images have ~3x capacity of grayscale (3 color channels vs 1)
     EXPECT_GT(rgbCapacity, grayCapacity);
@@ -257,7 +257,7 @@ TEST_P(EmbedExtractTest, MaxCapacityData) {
     ASSERT_TRUE(coverImage.IsSuccess());
     
     // Calculate max capacity and generate data that approaches it
-    auto maxCapacity = LSBStegoHandler::CalculateLSBCapacity(coverImage.GetValue());
+    auto maxCapacity = LSBStegoHandler::CalculateCapacity(coverImage.GetValue(), LSBStegoHandler::HEADER_SIZE_BITS);
     // Account for encryption overhead - use 90% of capacity
     auto safeDataSize = static_cast<size_t>(maxCapacity * 0.9);
     auto randomData = TestHelpers::GenerateRandomData(safeDataSize);
@@ -297,7 +297,7 @@ TEST_P(EmbedExtractTest, HeaderSizeIsAccountedFor) {
     ASSERT_TRUE(coverImage.IsSuccess());
     
     // exactly 1 byte over capacity to verify header overhead is accounted for
-    auto capacity = LSBStegoHandler::CalculateLSBCapacity(coverImage.GetValue());
+    auto capacity = LSBStegoHandler::CalculateCapacity(coverImage.GetValue(), LSBStegoHandler::HEADER_SIZE_BITS);
     auto oversizedData = TestHelpers::GenerateRandomData(capacity + 1);
     
     auto dataPath = TestHelpers::GetOutputPath("oversized_data.bin").string();
