@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include "algorithms/lsb/LSBStegoHandler.h"
-#include "algorithms/lsbshuffle/LSBShuffleStegoHandler.h"
+#include "algorithms/lsb/ordered/LSBStegoHandlerOrdered.h"
+#include "algorithms/lsb/shuffle/LSBShuffleStegoHandler.h"
 #include "utils/CryptoModule.h"
 #include "utils/ImageIO.h"
 #include "../test_helpers.h"
@@ -421,7 +421,7 @@ INSTANTIATE_TEST_SUITE_P(
     AllAlgorithms,
     EmbedExtractTest,
     ::testing::Values(
-        []() { return std::make_unique<LSBStegoHandler>(); },
-        []() { return std::make_unique<LSBShuffleStegoHandler>(); }
+        []() { return std::make_unique<LSBStegoHandlerOrdered>(); },
+        []() { return std::make_unique<LSBStegoHandlerShuffle>(); }
     )
 );

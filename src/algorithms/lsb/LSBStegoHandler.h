@@ -1,4 +1,4 @@
-#ifndef __LSB_STEGO_HANDLER_H_
+﻿#ifndef __LSB_STEGO_HANDLER_H_
 #define __LSB_STEGO_HANDLER_H_
 
 #include "../StegoHandler.h"
@@ -8,11 +8,11 @@
 #include <string>
 
 /**
- * @brief Implements LSB (Least Significant Bit) steganography for images.
+ * @brief Abstract base class for LSB (Least Significant Bit) steganography algorithms.
  *
- * This handler embeds and extracts data into/from images by modifying
- * the least significant bit of each pixel value. The data is encrypted
- * with AES-256-CBC before embedding for security.
+ * This handler provides common functionality for LSB-based steganography methods,
+ * including capacity calculation and validation. Concrete implementations define
+ * the specific embedding and extraction strategies.
  */
 class LSBStegoHandler : public StegoHandler {
 public:
@@ -23,31 +23,38 @@ public:
     static constexpr uint32_t HEADER_SIZE_BYTES = 4;
     
     /**
-     * @brief Embeds data into pixel array using LSB technique.
+     * @brief Calculate LSB steganography capacity in bytes for a given pixel count.
      * 
-     * Format: [32-bit size header | data bits]
+     * Each pixel can store 1 bit in its LSB. Capacity accounts for the header.
      * 
-     * @param pixels Pixel data to modify (in-place)
-     * @param dataToEmbed Data to embed (already encrypted)
-     * @return Result indicating success or embedding error
+     * @param pixelCount Total number of pixel values (width * height * channels)
+     * @param headerBits Size of header in bits
+     * @return Maximum bytes that can be embedded using LSB steganography
      */
-    Result<> EmbedMethod(std::vector<uint8_t> &pixels,
-                      const std::vector<uint8_t> &dataToEmbed,
-                      const std::string &password ) override;
+    static std::size_t CalculateCapacity(std::size_t pixelCount, std::size_t headerBits);
     
     /**
-     * @brief Extracts data from pixel array using LSB technique.
+     * @brief Calculate LSB steganography capacity for an image.
      * 
-     * @param pixels Pixel data to read from
-     * @return Result containing extracted data or error
+     * @param image Image data structure
+     * @param headerBits Size of header in bits
+     * @return Maximum bytes that can be embedded using LSB steganography
      */
-    Result<std::vector<uint8_t>> ExtractMethod(const std::vector<uint8_t> &pixels,
-                                            const std::string &password ) override;
-                                            
+    static std::size_t CalculateCapacity(const ImageData& image, std::size_t headerBits);
 
-    ~LSBStegoHandler() override = default;
+    /**
+     * @brief Validate image has sufficient LSB capacity for data.
+     * 
+     * @param pixelCount Total pixel values available
+     * @param dataSize Size of data to embed (in bytes)
+     * @param headerBits Size of header in bits
+     * @param fileMaxSize Maximum allowed file size
+     * @return Result indicating success or capacity error with details
+     */
+    static Result<> ValidateCapacity(std::size_t pixelCount, std::size_t dataSize, 
+                                     std::size_t headerBits, std::size_t fileMaxSize);
 
+    virtual ~LSBStegoHandler() = default;
 };
-
 
 #endif // __LSB_STEGO_HANDLER_H_

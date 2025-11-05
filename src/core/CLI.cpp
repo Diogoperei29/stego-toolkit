@@ -1,6 +1,6 @@
 #include "CLI.h"
-#include "../algorithms/lsb/LSBStegoHandler.h"
-#include "../algorithms/lsbshuffle/LSBShuffleStegoHandler.h"
+#include "../algorithms/lsb/ordered/LSBStegoHandlerOrdered.h"
+#include "../algorithms/lsb/shuffle/LSBStegoHandlerShuffle.h"
 #include <iostream>
 #include <fstream>
 #include <filesystem>
@@ -195,13 +195,13 @@ std::unique_ptr<StegoHandler> CLI::ChooseHandlerMethod(StegoMethod method){
     switch (method)
     {
     case StegoMethod::LSB:
-        return std::make_unique<LSBStegoHandler>();
+        return std::make_unique<LSBStegoHandlerOrdered>();
 
     case StegoMethod::LSBShuffle:
-        return std::make_unique<LSBShuffleStegoHandler>();
+        return std::make_unique<LSBStegoHandlerShuffle>();
     
     default:
-        return std::make_unique<LSBStegoHandler>();
+        return std::make_unique<LSBStegoHandlerOrdered>();
     }
 }
 

@@ -7,51 +7,10 @@
 #include <fstream>
 #include <sstream>
 
-std::size_t StegoHandler::CalculateCapacity(std::size_t pixelCount, std::size_t headerBits) {
-    if (pixelCount <= headerBits) {
-        return 0;
-    }
-    // Each pixel stores 1 bit, subtract header, convert to bytes
-    return (pixelCount - headerBits) / 8; 
-}
-
-std::size_t StegoHandler::CalculateCapacity(const ImageData& image , std::size_t headerBits) {
-    return CalculateCapacity(image.GetPixelCount(), headerBits);
-}
-
-Result<> StegoHandler::ValidateCapacity(std::size_t pixelCount, std::size_t dataSize , std::size_t headerBits, std::size_t fileMaxSize) {
-    if (dataSize > fileMaxSize) {
-        std::ostringstream oss;
-        oss << "Data size (" << dataSize << " bytes) exceeds maximum allowed size (" 
-            << fileMaxSize << " bytes)";
-        return Result<>(ErrorCode::DataTooLarge, oss.str());
-    }
-    
-    std::size_t availableCapacity = CalculateCapacity(pixelCount, headerBits);
-    
-    if (availableCapacity == 0) {
-        std::ostringstream oss;
-        oss << "Provided image is too small to contain embedded data. "
-            << "    Image has " << pixelCount << " pixel values.\n"
-            << "    You need an image with at least " << ((dataSize * 8) + headerBits) << " pixel values.";
-        return Result<>(ErrorCode::ImageTooSmall, oss.str());
-    }
-    
-    if (dataSize > availableCapacity) {
-        std::ostringstream oss;
-        oss << "Data size (" << dataSize << " bytes) exceeds Image capacity (" << availableCapacity << " bytes).\n"
-            << "    Image has " << pixelCount << " pixel values.\n"
-            << "    You need an image with at least " << ((dataSize * 8) + headerBits) << " pixel values.";
-        return Result<>(ErrorCode::InsufficientCapacity, oss.str());
-    }
-    
-    return Result<>();
-}
-
 Result<> StegoHandler::Embed(const std::string &coverFile,
-                                const std::string &dataFile,
-                                const std::string &outputFile,
-                                const std::string &password) {
+                             const std::string &dataFile,
+                             const std::string &outputFile,
+                             const std::string &password) {
     
     // Load cover image
     auto imageResult = ImageIO::Load(coverFile);
@@ -94,7 +53,7 @@ Result<> StegoHandler::Embed(const std::string &coverFile,
     const auto& encryptedData = encryptResult.GetValue();
 
     // Embed data into image
-    auto embedResult = EmbedMethod(imageData.pixels, encryptedData, password);
+    auto embedResult = EmbedMethod(imageData, encryptedData, password);
     if (!embedResult) {
         return embedResult;
     }
@@ -109,8 +68,8 @@ Result<> StegoHandler::Embed(const std::string &coverFile,
 }
 
 Result<> StegoHandler::Extract(const std::string &stegoFile,
-                                   const std::string &outputFile,
-                                   const std::string &password) {
+                               const std::string &outputFile,
+                               const std::string &password) {
     
     // Load stego image
     auto imageResult = ImageIO::Load(stegoFile);
@@ -119,10 +78,9 @@ Result<> StegoHandler::Extract(const std::string &stegoFile,
     }
     
     const auto& imageData = imageResult.GetValue();
-    const auto& pixels = imageData.pixels;
     
     // Extract encrypted data
-    auto extractResult = ExtractMethod(pixels,password);
+    auto extractResult = ExtractMethod(imageData, password);
     if (!extractResult) {
         return Result<>(
             extractResult.GetErrorCode(),

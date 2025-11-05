@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 #include "algorithms/lsb/LSBStegoHandler.h"
+#include "algorithms/lsb/ordered/LSBStegoHandlerOrdered.h"
+#include "algorithms/lsb/shuffle/LSBStegoHandlerShuffle.h"
 #include "utils/ImageIO.h"
 #include "../test_helpers.h"
 
@@ -82,8 +84,10 @@ TEST(LSBHandler_Embed, EmbedsDataCorrectly) {
     std::vector<uint8_t> pixels(1000, 128);
     std::vector<uint8_t> data{0xAB, 0xCD};
     
-    LSBStegoHandler handler;
-    auto result = handler.EmbedMethod(pixels, data, "");
+    LSBStegoHandlerOrdered handler;
+    ImageData imgData(pixels, pixels.size(), 1, 1);
+
+    auto result = handler.EmbedMethod(imgData, data, "");
     EXPECT_TRUE(result.IsSuccess());
     
     uint32_t embeddedSize = 0;
@@ -98,8 +102,10 @@ TEST(LSBHandler_Embed, ModifiesOnlyLSBs) {
     std::vector<uint8_t> pixels = original;
     std::vector<uint8_t> data{0x55, 0xAA, 0xFF};
     
-    LSBStegoHandler handler;
-    auto result = handler.EmbedMethod(pixels, data, "");
+    LSBStegoHandlerOrdered handler;
+    ImageData imgData(pixels, pixels.size(), 1, 1);
+
+    auto result = handler.EmbedMethod(imgData, data, "");
     EXPECT_TRUE(result.IsSuccess());
     
     for (size_t i = 0; i < pixels.size(); i++) {
@@ -112,8 +118,10 @@ TEST(LSBHandler_Embed, EmbedsSizeHeaderCorrectly) {
     std::vector<uint8_t> pixels(1000, 0);
     std::vector<uint8_t> data(42, 0xFF);
     
-    LSBStegoHandler handler;
-    auto result = handler.EmbedMethod(pixels, data, "");
+    LSBStegoHandlerOrdered handler;
+    ImageData imgData(pixels, pixels.size(), 1, 1);
+
+    auto result = handler.EmbedMethod(imgData, data, "");
     EXPECT_TRUE(result.IsSuccess());
     
     uint32_t size = 0;
@@ -128,8 +136,10 @@ TEST(LSBHandler_Embed, HandlesSingleByteData) {
     EXPECT_EQ(singleByte.size(), 1);
     
     std::vector<uint8_t> pixels(1000, 0);
-    LSBStegoHandler handler;
-    auto result = handler.EmbedMethod(pixels, singleByte, "");
+    LSBStegoHandlerOrdered handler;
+    ImageData imgData(pixels, pixels.size(), 1, 1);
+
+    auto result = handler.EmbedMethod(imgData, singleByte, "");
     EXPECT_TRUE(result.IsSuccess());
 }
 
@@ -139,8 +149,10 @@ TEST(LSBHandler_Embed, HandlesMaxCapacityData) {
     std::vector<uint8_t> pixels(pixelCount, 0);
     std::vector<uint8_t> data(maxCapacity, 0x42);
     
-    LSBStegoHandler handler;
-    auto result = handler.EmbedMethod(pixels, data, "");
+    LSBStegoHandlerOrdered handler;
+    ImageData imgData(pixels, pixels.size(), 1, 1);
+
+    auto result = handler.EmbedMethod(imgData, data, "");
     EXPECT_TRUE(result.IsSuccess());
 }
 
@@ -150,45 +162,61 @@ TEST(LSBHandler_Extract, ExtractsEmbeddedData) {
     std::vector<uint8_t> pixels(1000, 0);
     std::vector<uint8_t> original{1, 2, 3, 4, 5};
     
-    LSBStegoHandler handler;
-    auto embedResult = handler.EmbedMethod(pixels, original, "");
+    LSBStegoHandlerOrdered handler;
+    ImageData imgData(pixels, pixels.size(), 1, 1);
+    auto embedResult = handler.EmbedMethod(imgData, original, "");
     EXPECT_TRUE(embedResult.IsSuccess());
     
-    auto extractResult = handler.ExtractMethod(pixels, "");
+    ImageData imgData2(pixels, pixels.size(), 1, 1);
+
+    
+    auto extractResult = handler.ExtractMethod(imgData2, "");
     EXPECT_TRUE(extractResult.IsSuccess());
     EXPECT_EQ(extractResult.GetValue(), original);
 }
 
 TEST(LSBHandler_Extract, ReadsCorrectDataSize) {
-    LSBStegoHandler handler;
+    LSBStegoHandlerOrdered handler;
     
     std::vector<uint8_t> pixels1(1000, 0);
     std::vector<uint8_t> data1(1, 0xAA);
-    handler.EmbedMethod(pixels1, data1, "");
-    auto result1 = handler.ExtractMethod(pixels1, "");
+    ImageData imgData1(pixels1, pixels1.size(), 1, 1);
+
+    handler.EmbedMethod(imgData1, data1, "");
+    ImageData imgDataEx1(pixels1, pixels1.size(), 1, 1);
+
+    auto result1 = handler.ExtractMethod(imgDataEx1, "");
     EXPECT_TRUE(result1.IsSuccess());
     EXPECT_EQ(result1.GetValue().size(), 1);
     
     std::vector<uint8_t> pixels2(10000, 0);
     std::vector<uint8_t> data2(100, 0xBB);
-    handler.EmbedMethod(pixels2, data2, "");
-    auto result2 = handler.ExtractMethod(pixels2, "");
+    ImageData imgData2(pixels2, pixels2.size(), 1, 1);
+
+    handler.EmbedMethod(imgData2, data2, "");
+    ImageData imgDataEx2(pixels2, pixels2.size(), 1, 1);
+
+    auto result2 = handler.ExtractMethod(imgDataEx2, "");
     EXPECT_TRUE(result2.IsSuccess());
     EXPECT_EQ(result2.GetValue().size(), 100);
 }
 
 TEST(LSBHandler_Extract, HandlesCorruptSizeHeader) {
-    LSBStegoHandler handler;
+    LSBStegoHandlerOrdered handler;
     std::vector<uint8_t> pixels(1000, 0);
     
     for (int i = 0; i < 32; i++) {
         pixels[i] = (i < 16) ? 1 : 0;
     }
-    auto result = handler.ExtractMethod(pixels, "");
+    ImageData imgData2(pixels, pixels.size(), 1, 1);
+
+    auto result = handler.ExtractMethod(imgData2, "");
     EXPECT_TRUE(result.IsError());
     
     std::vector<uint8_t> pixels2(1000, 0xFF);
-    auto result2 = handler.ExtractMethod(pixels2, "");
+    ImageData imgDataEx2(pixels2, pixels2.size(), 1, 1);
+
+    auto result2 = handler.ExtractMethod(imgDataEx2, "");
     EXPECT_TRUE(result2.IsError());
 }
 
@@ -201,11 +229,11 @@ TEST(LSBHandler_RoundTrip, SmallDataRoundTrip) {
     auto image = ImageIO::Load(TestHelpers::GetFixturePath("small_gray.png").string());
     EXPECT_TRUE(image.IsSuccess());
     
-    LSBStegoHandler handler;
-    auto embedResult = handler.EmbedMethod(image.GetValue().pixels, data, "");
+    LSBStegoHandlerOrdered handler;
+    auto embedResult = handler.EmbedMethod(image.GetValue(), data, "");
     EXPECT_TRUE(embedResult.IsSuccess());
     
-    auto extractResult = handler.ExtractMethod(image.GetValue().pixels, "");
+    auto extractResult = handler.ExtractMethod(image.GetValue(), "");
     EXPECT_TRUE(extractResult.IsSuccess());
     EXPECT_EQ(extractResult.GetValue(), data);
 }
@@ -216,11 +244,11 @@ TEST(LSBHandler_RoundTrip, BinaryDataRoundTrip) {
     auto image = ImageIO::Load(TestHelpers::GetFixturePath("medium_gray.png").string());
     EXPECT_TRUE(image.IsSuccess());
     
-    LSBStegoHandler handler;
-    auto embedResult = handler.EmbedMethod(image.GetValue().pixels, binaryData, "");
+    LSBStegoHandlerOrdered handler;
+    auto embedResult = handler.EmbedMethod(image.GetValue(), binaryData, "");
     EXPECT_TRUE(embedResult.IsSuccess());
     
-    auto extractResult = handler.ExtractMethod(image.GetValue().pixels, "");
+    auto extractResult = handler.ExtractMethod(image.GetValue(), "");
     EXPECT_TRUE(extractResult.IsSuccess());
     EXPECT_EQ(extractResult.GetValue(), binaryData);
 }
@@ -232,11 +260,11 @@ TEST(LSBHandler_RoundTrip, UnicodeDataRoundTrip) {
     auto image = ImageIO::Load(TestHelpers::GetFixturePath("medium_gray.png").string());
     EXPECT_TRUE(image.IsSuccess());
     
-    LSBStegoHandler handler;
-    auto embedResult = handler.EmbedMethod(image.GetValue().pixels, data, "");
+    LSBStegoHandlerOrdered handler;
+    auto embedResult = handler.EmbedMethod(image.GetValue(), data, "");
     EXPECT_TRUE(embedResult.IsSuccess());
     
-    auto extractResult = handler.ExtractMethod(image.GetValue().pixels, "");
+    auto extractResult = handler.ExtractMethod(image.GetValue(), "");
     EXPECT_TRUE(extractResult.IsSuccess());
     
     std::string extracted(extractResult.GetValue().begin(), extractResult.GetValue().end());
@@ -250,11 +278,11 @@ TEST(LSBHandler_RoundTrip, LargeDataRoundTrip) {
     auto image = ImageIO::Load(TestHelpers::GetFixturePath("huge_gray.png").string());
     EXPECT_TRUE(image.IsSuccess());
     
-    LSBStegoHandler handler;
-    auto embedResult = handler.EmbedMethod(image.GetValue().pixels, data, "");
+    LSBStegoHandlerOrdered handler;
+    auto embedResult = handler.EmbedMethod(image.GetValue(), data, "");
     EXPECT_TRUE(embedResult.IsSuccess());
     
-    auto extractResult = handler.ExtractMethod(image.GetValue().pixels, "");
+    auto extractResult = handler.ExtractMethod(image.GetValue(), "");
     EXPECT_TRUE(extractResult.IsSuccess());
     EXPECT_EQ(extractResult.GetValue().size(), data.size());
 }
@@ -266,11 +294,11 @@ TEST(LSBHandler_Formats, WorksWithPNG) {
     EXPECT_TRUE(image.IsSuccess());
     
     std::vector<uint8_t> data{1, 2, 3, 4, 5};
-    LSBStegoHandler handler;
-    auto embedResult = handler.EmbedMethod(image.GetValue().pixels, data, "");
+    LSBStegoHandlerOrdered handler;
+    auto embedResult = handler.EmbedMethod(image.GetValue(), data, "");
     EXPECT_TRUE(embedResult.IsSuccess());
     
-    auto extractResult = handler.ExtractMethod(image.GetValue().pixels, "");
+    auto extractResult = handler.ExtractMethod(image.GetValue(), "");
     EXPECT_TRUE(extractResult.IsSuccess());
     EXPECT_EQ(extractResult.GetValue(), data);
 }
@@ -280,11 +308,11 @@ TEST(LSBHandler_Formats, WorksWithBMP) {
     EXPECT_TRUE(image.IsSuccess());
     
     std::vector<uint8_t> data{0xDE, 0xAD, 0xBE, 0xEF};
-    LSBStegoHandler handler;
-    auto embedResult = handler.EmbedMethod(image.GetValue().pixels, data, "");
+    LSBStegoHandlerOrdered handler;
+    auto embedResult = handler.EmbedMethod(image.GetValue(), data, "");
     EXPECT_TRUE(embedResult.IsSuccess());
     
-    auto extractResult = handler.ExtractMethod(image.GetValue().pixels, "");
+    auto extractResult = handler.ExtractMethod(image.GetValue(), "");
     EXPECT_TRUE(extractResult.IsSuccess());
     EXPECT_EQ(extractResult.GetValue(), data);
 }
@@ -295,11 +323,11 @@ TEST(LSBHandler_Formats, HandlesGrayscaleImages) {
     EXPECT_EQ(grayImage.GetValue().channels, 1);
     
     std::vector<uint8_t> data{0xAA, 0xBB, 0xCC};
-    LSBStegoHandler handler;
-    auto result = handler.EmbedMethod(grayImage.GetValue().pixels, data, "");
+    LSBStegoHandlerOrdered handler;
+    auto result = handler.EmbedMethod(grayImage.GetValue(), data, "");
     EXPECT_TRUE(result.IsSuccess());
     
-    auto extracted = handler.ExtractMethod(grayImage.GetValue().pixels, "");
+    auto extracted = handler.ExtractMethod(grayImage.GetValue(), "");
     EXPECT_TRUE(extracted.IsSuccess());
     EXPECT_EQ(extracted.GetValue(), data);
 }
@@ -323,11 +351,11 @@ TEST(LSBHandler_Formats, HandlesRGBAImages) {
     EXPECT_EQ(rgbaImage.GetValue().channels, 4);
     
     std::vector<uint8_t> data(50, 0x55);
-    LSBStegoHandler handler;
-    auto result = handler.EmbedMethod(rgbaImage.GetValue().pixels, data, "");
+    LSBStegoHandlerOrdered handler;
+    auto result = handler.EmbedMethod(rgbaImage.GetValue(), data, "");
     EXPECT_TRUE(result.IsSuccess());
     
-    auto extracted = handler.ExtractMethod(rgbaImage.GetValue().pixels, "");
+    auto extracted = handler.ExtractMethod(rgbaImage.GetValue(), "");
     EXPECT_TRUE(extracted.IsSuccess());
     EXPECT_EQ(extracted.GetValue(), data);
 }
@@ -348,8 +376,10 @@ TEST(LSBHandler_Errors, RejectsEmptyData) {
     std::vector<uint8_t> pixels(1000, 0);
     std::vector<uint8_t> emptyData;
     
-    LSBStegoHandler handler;
-    auto result = handler.EmbedMethod(pixels, emptyData, "");
+    LSBStegoHandlerOrdered handler;
+    ImageData imgData(pixels, pixels.size(), 1, 1);
+
+    auto result = handler.EmbedMethod(imgData, emptyData, "");
     EXPECT_TRUE(result.IsError());
     EXPECT_EQ(result.GetErrorCode(), ErrorCode::InvalidArgument);
 }

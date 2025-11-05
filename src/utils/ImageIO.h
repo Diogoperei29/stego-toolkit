@@ -8,10 +8,20 @@
 
 // Represents image data with metadata.
 struct ImageData {
+public:
     std::vector<uint8_t> pixels;
     int width;
     int height;
     int channels;
+
+    ImageData() = default;
+
+    explicit ImageData( std::vector<uint8_t> pixels, int width, int height, int channels )
+        : pixels (pixels),
+          width (width),
+          height (height),
+          channels (channels) 
+    {   }
     
     /**
      * @brief Get total number of pixel values (width * height * channels).

@@ -1,6 +1,6 @@
-#include "LSBShuffleStegoHandler.h"
-#include "../../utils/ImageIO.h"
-#include "../../utils/CryptoModule.h"
+#include "LSBStegoHandlerShuffle.h"
+#include "../../../utils/ImageIO.h"
+#include "../../../utils/CryptoModule.h"
 
 #include <vector>
 #include <string>
@@ -10,16 +10,18 @@
 #include <algorithm>
 #include <iostream>
 
-Result<> LSBShuffleStegoHandler::EmbedMethod(std::vector<uint8_t> &pixels,
-                                        const std::vector<uint8_t> &dataToEmbed,
-                                        const std::string &password) {
+Result<> LSBStegoHandlerShuffle::EmbedMethod(ImageData &imageData,
+                                             const std::vector<uint8_t> &dataToEmbed,
+                                             const std::string &password) {
     
+    auto &pixels = imageData.pixels;
+
     if (dataToEmbed.empty()) {
         return Result<>(ErrorCode::InvalidArgument, "Cannot embed empty data");
     }
     
     // Validate capacity
-    auto capacityCheck = StegoHandler::ValidateCapacity(pixels.size(), dataToEmbed.size(), HEADER_SIZE_BITS, MAX_REASONABLE_SIZE);
+    auto capacityCheck = LSBStegoHandler::ValidateCapacity(pixels.size(), dataToEmbed.size(), HEADER_SIZE_BITS, MAX_REASONABLE_SIZE);
     if (!capacityCheck) {
         return capacityCheck;
     }
@@ -60,10 +62,12 @@ Result<> LSBShuffleStegoHandler::EmbedMethod(std::vector<uint8_t> &pixels,
     return Result<>();
 }
 
-Result<std::vector<uint8_t>> LSBShuffleStegoHandler::ExtractMethod(const std::vector<uint8_t> &pixels, 
-                                                                const std::string &password) {
+Result<std::vector<uint8_t>> LSBStegoHandlerShuffle::ExtractMethod(const ImageData &imageData, 
+                                                                   const std::string &password) {
     
 
+    auto &pixels = imageData.pixels;                                                    
+                    
     std::size_t imgSize = pixels.size();
     
     // Validate minimum size
