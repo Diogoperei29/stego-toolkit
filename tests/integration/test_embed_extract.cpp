@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include "algorithms/lsb/ordered/LSBStegoHandlerOrdered.h"
-#include "algorithms/lsb/shuffle/LSBShuffleStegoHandler.h"
+#include "algorithms/lsb/shuffle/LSBStegoHandlerShuffle.h"
 #include "utils/CryptoModule.h"
 #include "utils/ImageIO.h"
 #include "../test_helpers.h"

@@ -72,8 +72,8 @@ TEST(LSBHandler_Validation, RejectsOversizedData) {
 }
 
 TEST(LSBHandler_Validation, RejectsUnreasonablyLargeData) {
-    size_t maxSize = 100 * 1024 * 1024;
-    auto result = LSBStegoHandler::ValidateCapacity(1000000000, maxSize + 1, LSBStegoHandler::HEADER_SIZE_BITS, LSBStegoHandler::MAX_REASONABLE_SIZE );
+    size_t unreasonablyLargeSize = static_cast<size_t>(LSBStegoHandler::MAX_REASONABLE_SIZE) + 1;
+    auto result = LSBStegoHandler::ValidateCapacity(10000000000, unreasonablyLargeSize, LSBStegoHandler::HEADER_SIZE_BITS, LSBStegoHandler::MAX_REASONABLE_SIZE );
     EXPECT_TRUE(result.IsError());
     EXPECT_EQ(result.GetErrorCode(), ErrorCode::DataTooLarge);
 }
@@ -85,14 +85,14 @@ TEST(LSBHandler_Embed, EmbedsDataCorrectly) {
     std::vector<uint8_t> data{0xAB, 0xCD};
     
     LSBStegoHandlerOrdered handler;
-    ImageData imgData(pixels, pixels.size(), 1, 1);
+    ImageData imgData(pixels, static_cast<int>(pixels.size()), 1, 1);
 
     auto result = handler.EmbedMethod(imgData, data, "");
     EXPECT_TRUE(result.IsSuccess());
     
     uint32_t embeddedSize = 0;
     for (int i = 0; i < 32; i++) {
-        embeddedSize |= ((pixels[i] & 1) << i);
+        embeddedSize |= ((imgData.pixels[i] & 1) << i);
     }
     EXPECT_EQ(embeddedSize, 2);
 }
@@ -103,13 +103,13 @@ TEST(LSBHandler_Embed, ModifiesOnlyLSBs) {
     std::vector<uint8_t> data{0x55, 0xAA, 0xFF};
     
     LSBStegoHandlerOrdered handler;
-    ImageData imgData(pixels, pixels.size(), 1, 1);
+    ImageData imgData(pixels, static_cast<int>(pixels.size()), 1, 1);
 
     auto result = handler.EmbedMethod(imgData, data, "");
     EXPECT_TRUE(result.IsSuccess());
     
-    for (size_t i = 0; i < pixels.size(); i++) {
-        int diff = std::abs(static_cast<int>(pixels[i]) - static_cast<int>(original[i]));
+    for (size_t i = 0; i < imgData.pixels.size(); i++) {
+        int diff = std::abs(static_cast<int>(imgData.pixels[i]) - static_cast<int>(original[i]));
         EXPECT_LE(diff, 1);
     }
 }
@@ -119,14 +119,14 @@ TEST(LSBHandler_Embed, EmbedsSizeHeaderCorrectly) {
     std::vector<uint8_t> data(42, 0xFF);
     
     LSBStegoHandlerOrdered handler;
-    ImageData imgData(pixels, pixels.size(), 1, 1);
+    ImageData imgData(pixels, static_cast<int>(pixels.size()), 1, 1);
 
     auto result = handler.EmbedMethod(imgData, data, "");
     EXPECT_TRUE(result.IsSuccess());
     
     uint32_t size = 0;
     for (int i = 0; i < 32; i++) {
-        size |= ((pixels[i] & 1) << i);
+        size |= ((imgData.pixels[i] & 1) << i);
     }
     EXPECT_EQ(size, 42);
 }
@@ -137,7 +137,7 @@ TEST(LSBHandler_Embed, HandlesSingleByteData) {
     
     std::vector<uint8_t> pixels(1000, 0);
     LSBStegoHandlerOrdered handler;
-    ImageData imgData(pixels, pixels.size(), 1, 1);
+    ImageData imgData(pixels, static_cast<int>(pixels.size()), 1, 1);
 
     auto result = handler.EmbedMethod(imgData, singleByte, "");
     EXPECT_TRUE(result.IsSuccess());
@@ -150,7 +150,7 @@ TEST(LSBHandler_Embed, HandlesMaxCapacityData) {
     std::vector<uint8_t> data(maxCapacity, 0x42);
     
     LSBStegoHandlerOrdered handler;
-    ImageData imgData(pixels, pixels.size(), 1, 1);
+    ImageData imgData(pixels, static_cast<int>(pixels.size()), 1, 1);
 
     auto result = handler.EmbedMethod(imgData, data, "");
     EXPECT_TRUE(result.IsSuccess());
@@ -163,11 +163,11 @@ TEST(LSBHandler_Extract, ExtractsEmbeddedData) {
     std::vector<uint8_t> original{1, 2, 3, 4, 5};
     
     LSBStegoHandlerOrdered handler;
-    ImageData imgData(pixels, pixels.size(), 1, 1);
+    ImageData imgData(pixels, static_cast<int>(pixels.size()), 1, 1);
     auto embedResult = handler.EmbedMethod(imgData, original, "");
     EXPECT_TRUE(embedResult.IsSuccess());
     
-    ImageData imgData2(pixels, pixels.size(), 1, 1);
+    ImageData imgData2(imgData.pixels, static_cast<int>(imgData.pixels.size()), 1, 1);
 
     
     auto extractResult = handler.ExtractMethod(imgData2, "");
@@ -180,10 +180,10 @@ TEST(LSBHandler_Extract, ReadsCorrectDataSize) {
     
     std::vector<uint8_t> pixels1(1000, 0);
     std::vector<uint8_t> data1(1, 0xAA);
-    ImageData imgData1(pixels1, pixels1.size(), 1, 1);
+    ImageData imgData1(pixels1, static_cast<int>(pixels1.size()), 1, 1);
 
     handler.EmbedMethod(imgData1, data1, "");
-    ImageData imgDataEx1(pixels1, pixels1.size(), 1, 1);
+    ImageData imgDataEx1(imgData1.pixels, static_cast<int>(imgData1.pixels.size()), 1, 1);
 
     auto result1 = handler.ExtractMethod(imgDataEx1, "");
     EXPECT_TRUE(result1.IsSuccess());
@@ -191,10 +191,10 @@ TEST(LSBHandler_Extract, ReadsCorrectDataSize) {
     
     std::vector<uint8_t> pixels2(10000, 0);
     std::vector<uint8_t> data2(100, 0xBB);
-    ImageData imgData2(pixels2, pixels2.size(), 1, 1);
+    ImageData imgData2(pixels2, static_cast<int>(pixels2.size()), 1, 1);
 
     handler.EmbedMethod(imgData2, data2, "");
-    ImageData imgDataEx2(pixels2, pixels2.size(), 1, 1);
+    ImageData imgDataEx2(imgData2.pixels, static_cast<int>(imgData2.pixels.size()), 1, 1);
 
     auto result2 = handler.ExtractMethod(imgDataEx2, "");
     EXPECT_TRUE(result2.IsSuccess());
@@ -208,13 +208,13 @@ TEST(LSBHandler_Extract, HandlesCorruptSizeHeader) {
     for (int i = 0; i < 32; i++) {
         pixels[i] = (i < 16) ? 1 : 0;
     }
-    ImageData imgData2(pixels, pixels.size(), 1, 1);
+    ImageData imgData2(pixels, static_cast<int>(pixels.size()), 1, 1);
 
     auto result = handler.ExtractMethod(imgData2, "");
     EXPECT_TRUE(result.IsError());
     
     std::vector<uint8_t> pixels2(1000, 0xFF);
-    ImageData imgDataEx2(pixels2, pixels2.size(), 1, 1);
+    ImageData imgDataEx2(pixels2, static_cast<int>(pixels2.size()), 1, 1);
 
     auto result2 = handler.ExtractMethod(imgDataEx2, "");
     EXPECT_TRUE(result2.IsError());
@@ -377,7 +377,7 @@ TEST(LSBHandler_Errors, RejectsEmptyData) {
     std::vector<uint8_t> emptyData;
     
     LSBStegoHandlerOrdered handler;
-    ImageData imgData(pixels, pixels.size(), 1, 1);
+    ImageData imgData(pixels, static_cast<int>(pixels.size()), 1, 1);
 
     auto result = handler.EmbedMethod(imgData, emptyData, "");
     EXPECT_TRUE(result.IsError());
