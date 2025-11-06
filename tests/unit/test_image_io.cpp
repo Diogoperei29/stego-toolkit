@@ -486,3 +486,54 @@ TEST_F(ImageIOTest, InvalidFormatHasHelpfulMessage) {
     std::string msg = result.GetErrorMessage();
     EXPECT_FALSE(msg.empty());
 }
+
+// Spiral Image Tests
+TEST_F(ImageIOTest, GetPixelsIndexesInSpiralIsCorrect) {
+    // 3x3 image - square
+    {
+        ImageData img3x3({0,1,2,3,4,5,6,7,8}, 3, 3, 1);
+        auto spiral = img3x3.GetPixelsIndexesInSpiral();
+        
+        // Expected spiral order: 0,1,2,5,8,7,6,3,4 (clockwise from top-left)
+        std::vector<std::size_t> expected = {0, 1, 2, 5, 8, 7, 6, 3, 4};
+        EXPECT_EQ(spiral, expected);
+    }
+    
+    // 1x1 image - single pixel
+    {
+        ImageData img1x1({42}, 1, 1, 1);
+        auto spiral = img1x1.GetPixelsIndexesInSpiral();
+        
+        std::vector<std::size_t> expected = {0};
+        EXPECT_EQ(spiral, expected);
+    }
+    
+    // 4x2 image - wide rectangle
+    {
+        ImageData img4x2({0,1,2,3,4,5,6,7}, 4, 2, 1);
+        auto spiral = img4x2.GetPixelsIndexesInSpiral();
+        
+        std::vector<std::size_t> expected = {0, 1, 2, 3, 7, 6, 5, 4};
+        EXPECT_EQ(spiral, expected);
+    }
+    
+    // 2x4 image - tall rectangle
+    {
+        ImageData img2x4({0,1,2,3,4,5,6,7}, 2, 4, 1);
+        auto spiral = img2x4.GetPixelsIndexesInSpiral();
+        
+        std::vector<std::size_t> expected = {0, 1, 3, 5, 7, 6, 4, 2};
+        EXPECT_EQ(spiral, expected);
+    }
+    
+    // 4x4 image - larger square
+    {
+        std::vector<uint8_t> pixels(16);
+        for (int i = 0; i < 16; i++) pixels[i] = static_cast<uint8_t>(i);
+        ImageData img4x4(pixels, 4, 4, 1);
+        auto spiral = img4x4.GetPixelsIndexesInSpiral();
+        
+        std::vector<std::size_t> expected = {0, 1, 2, 3, 7, 11, 15, 14, 13, 12, 8, 4, 5, 6, 10, 9};
+        EXPECT_EQ(spiral, expected);
+    }
+}

@@ -2,9 +2,9 @@
 #define __STEGO_HANDLER_H_
 
 #include <string>
-#include <vector>
 #include <cstdint>
 #include "../utils/ErrorHandler.h"
+#include "../utils/ImageIO.h"
 
 /**
  * @brief Abstract base class for all steganography handlers.
@@ -14,33 +14,61 @@
  */
 class StegoHandler {
 public:
-    /**
-     * @brief Embed data into a cover file.
-     * 
-     * @param coverFile Path to the input cover file
-     * @param dataFile Path to the data to embed
-     * @param outputFile Path to save the stego file
-     * @param password Password for encryption
-     * @return Result indicating success or detailed error
-     */
-    virtual Result<> Embed(const std::string &coverFile,
-                           const std::string &dataFile,
-                           const std::string &outputFile,
-                           const std::string &password) = 0;
+
+    static constexpr uint32_t MAX_REASONABLE_SIZE = 1024 * 1024 * 1024 * 1; // 1GB Max File size sanity check
 
     /**
-     * @brief Extract data from a stego file.
+     * @brief Embeds data into pixel array using technique from subclass.
      * 
-     * @param stegoFile Path to the stego file
-     * @param outputFile Path to save the extracted data
-     * @param password Password for decryption
-     * @return Result indicating success or detailed error
+     * Format: [32-bit size header | data bits]
+     * 
+     * @param imageData Image data to modify (in-place)
+     * @param dataToEmbed Data to embed (already encrypted)
+     * @param password Password that may be used in Extraction
+     * @return Result indicating success or embedding error
      */
-    virtual Result<> Extract(const std::string &stegoFile,
-                             const std::string &outputFile,
-                             const std::string &password) = 0;
+    virtual Result<> EmbedMethod(ImageData &imageData,
+                                 const std::vector<uint8_t> &dataToEmbed,
+                                 const std::string &password ) = 0;
+    
+    /**
+     * @brief Extracts data from pixel array using technique from subclass.
+     * 
+     * @param imageData Image data to read from
+     * @param password Password that may be used in Extraction
+     * @return Result containing extracted data (encrypted) or error
+     */
+    virtual Result<std::vector<uint8_t>> ExtractMethod(const ImageData &imageData,
+                                                       const std::string &password ) = 0;
+
+    /**
+    * @brief Embeds a file into a cover image using steganography.
+    *
+    * @param coverFile Path to the input cover image
+    * @param dataFile Path to the file to embed
+    * @param outputFile Path to save the stego image
+    * @param password Password used for AES encryption
+    * @return Result indicating success or detailed error
+    */
+    Result<> Embed(const std::string &coverFile,
+                   const std::string &dataFile,
+                   const std::string &outputFile,
+                   const std::string &password);
+
+    /**
+    * @brief Extracts a hidden file from a stego image using steganography.
+    *
+    * @param stegoFile Path to the stego image
+    * @param outputFile Path to save the recovered file
+    * @param password Password used for AES decryption
+    * @return Result indicating success or detailed error
+    */
+    Result<> Extract(const std::string &stegoFile,
+                     const std::string &outputFile,
+                     const std::string &password);
 
     virtual ~StegoHandler() = default;
+
 };
 
 

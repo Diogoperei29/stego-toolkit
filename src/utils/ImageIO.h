@@ -8,10 +8,20 @@
 
 // Represents image data with metadata.
 struct ImageData {
+public:
     std::vector<uint8_t> pixels;
     int width;
     int height;
     int channels;
+
+    ImageData() = default;
+
+    explicit ImageData( std::vector<uint8_t> pixels, int width, int height, int channels )
+        : pixels (pixels),
+          width (width),
+          height (height),
+          channels (channels) 
+    {   }
     
     /**
      * @brief Get total number of pixel values (width * height * channels).
@@ -25,6 +35,49 @@ struct ImageData {
      */
     bool IsValid() const {
         return width > 0 && height > 0 && channels > 0 && !pixels.empty();
+    }
+
+    /**
+     * @brief Get pixel indexes in spiral order (clockwise)
+     * Spiral: Top-Left -> Top-Right -> Bottom-Right -> Bottom-Left (spiral clockwise)
+     * 
+     * @return indexes vector into the flat pixels vector for spiral access pattern.
+     */
+    std::vector<std::size_t> GetPixelsIndexesInSpiral() {
+        std::vector<std::size_t> spiralPixels;
+        spiralPixels.reserve(static_cast<std::size_t>(width * height));
+        
+        int start_x = 0, start_y = 0;
+        int end_x = width - 1;
+        int end_y = height - 1;
+
+        while (start_x <= end_x && start_y <= end_y) { 
+            // Top edge: Left to Right
+            for (int x = start_x; x <= end_x; ++x)
+                spiralPixels.push_back(static_cast<std::size_t>(x + start_y * width));
+            start_y++;
+            
+            // Right edge: Top to Bottom
+            for (int y = start_y; y <= end_y; ++y) 
+                spiralPixels.push_back(static_cast<std::size_t>(end_x + y * width));
+            end_x--;
+            
+            // Bottom edge: Right to Left (if there's a row)
+            if (start_y <= end_y) {
+                for (int x = end_x; x >= start_x; --x)
+                    spiralPixels.push_back(static_cast<std::size_t>(x + end_y * width));
+                end_y--;
+            }
+
+            // Left edge: Bottom to Top (if there's a column)
+            if (start_x <= end_x) {
+                for (int y = end_y; y >= start_y; --y)
+                    spiralPixels.push_back(static_cast<std::size_t>(start_x + y * width));
+                start_x++;
+            }
+        }
+
+        return spiralPixels;
     }
 };
 

@@ -55,12 +55,14 @@ endif()
 
 # Create a library for the core functionality (used by both main and tests)
 set(LIB_SOURCES
+  src/algorithms/StegoHandler.cpp
   src/core/CLI.cpp
   src/utils/CryptoModule.cpp
   src/utils/ErrorHandler.cpp
   src/utils/ImageIO.cpp
   src/algorithms/lsb/LSBStegoHandler.cpp
-  src/algorithms/lsbshuffle/LSBShuffleStegoHandler.cpp
+  src/algorithms/lsb/ordered/LSBStegoHandlerOrdered.cpp
+  src/algorithms/lsb/shuffle/LSBStegoHandlerShuffle.cpp
 )
 
 set(LIB_HEADERS
@@ -70,7 +72,8 @@ set(LIB_HEADERS
   src/utils/ErrorHandler.h
   src/utils/ImageIO.h
   src/algorithms/lsb/LSBStegoHandler.h
-  src/algorithms/lsbshuffle/LSBShuffleStegoHandler.h
+  src/algorithms/lsb/ordered/LSBStegoHandlerOrdered.h
+  src/algorithms/lsb/shuffle/LSBStegoHandlerShuffle.h
 )
 
 # StegTool library
