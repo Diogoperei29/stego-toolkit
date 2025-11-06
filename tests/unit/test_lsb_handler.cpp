@@ -194,9 +194,9 @@ TEST(LSBHandler_Extract, ReadsCorrectDataSize) {
     ImageData imgData2(pixels2, static_cast<int>(pixels2.size()), 1, 1);
 
     handler.EmbedMethod(imgData2, data2, "");
-    ImageData imgDataEx2(imgData2.pixels, static_cast<int>(imgData2.pixels.size()), 1, 1);
+    // ImageData imgDataEx2(imgData2.pixels, static_cast<int>(imgData2.pixels.size()), 1, 1);
 
-    auto result2 = handler.ExtractMethod(imgDataEx2, "");
+    auto result2 = handler.ExtractMethod(imgData2, "");
     EXPECT_TRUE(result2.IsSuccess());
     EXPECT_EQ(result2.GetValue().size(), 100);
 }
