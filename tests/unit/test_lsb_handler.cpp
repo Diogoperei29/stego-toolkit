@@ -167,10 +167,10 @@ TEST(LSBHandler_Extract, ExtractsEmbeddedData) {
     auto embedResult = handler.EmbedMethod(imgData, original, "");
     EXPECT_TRUE(embedResult.IsSuccess());
     
-    ImageData imgData2(imgData.pixels, static_cast<int>(imgData.pixels.size()), 1, 1);
+    // Pass imgData directly, no need to create a copy
 
     
-    auto extractResult = handler.ExtractMethod(imgData2, "");
+    auto extractResult = handler.ExtractMethod(imgData, "");
     EXPECT_TRUE(extractResult.IsSuccess());
     EXPECT_EQ(extractResult.GetValue(), original);
 }
