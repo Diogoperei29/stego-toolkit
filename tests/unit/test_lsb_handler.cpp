@@ -53,27 +53,27 @@ TEST(LSBHandler_Capacity, HandlesEdgeCasesCorrectly) {
 // LSB Capacity Validation Tests
 
 TEST(LSBHandler_Validation, AcceptsValidDataSize) {
-    auto result = LSBStegoHandler::ValidateCapacity(1000, 100, LSBStegoHandler::HEADER_SIZE_BITS, LSBStegoHandler::MAX_REASONABLE_SIZE );
+    auto result = LSBStegoHandler::ValidateCapacity(1000, 100, LSBStegoHandler::HEADER_SIZE_BITS, StegoHandler::MAX_REASONABLE_SIZE );
     EXPECT_TRUE(result.IsSuccess());
     
-    auto result2 = LSBStegoHandler::ValidateCapacity(1000, 121, LSBStegoHandler::HEADER_SIZE_BITS, LSBStegoHandler::MAX_REASONABLE_SIZE );
+    auto result2 = LSBStegoHandler::ValidateCapacity(1000, 121, LSBStegoHandler::HEADER_SIZE_BITS, StegoHandler::MAX_REASONABLE_SIZE );
     EXPECT_TRUE(result2.IsSuccess());
 }
 
 TEST(LSBHandler_Validation, RejectsOversizedData) {
-    auto result = LSBStegoHandler::ValidateCapacity(1000, 122, LSBStegoHandler::HEADER_SIZE_BITS, LSBStegoHandler::MAX_REASONABLE_SIZE );
+    auto result = LSBStegoHandler::ValidateCapacity(1000, 122, LSBStegoHandler::HEADER_SIZE_BITS, StegoHandler::MAX_REASONABLE_SIZE );
     EXPECT_TRUE(result.IsError());
     EXPECT_EQ(result.GetErrorCode(), ErrorCode::InsufficientCapacity);
     EXPECT_FALSE(result.GetErrorMessage().empty());
     
-    auto result2 = LSBStegoHandler::ValidateCapacity(100, 50, LSBStegoHandler::HEADER_SIZE_BITS, LSBStegoHandler::MAX_REASONABLE_SIZE );
+    auto result2 = LSBStegoHandler::ValidateCapacity(100, 50, LSBStegoHandler::HEADER_SIZE_BITS, StegoHandler::MAX_REASONABLE_SIZE );
     EXPECT_TRUE(result2.IsError());
     EXPECT_EQ(result2.GetErrorCode(), ErrorCode::InsufficientCapacity);
 }
 
 TEST(LSBHandler_Validation, RejectsUnreasonablyLargeData) {
-    size_t unreasonablyLargeSize = static_cast<size_t>(LSBStegoHandler::MAX_REASONABLE_SIZE) + 1;
-    auto result = LSBStegoHandler::ValidateCapacity(10000000000, unreasonablyLargeSize, LSBStegoHandler::HEADER_SIZE_BITS, LSBStegoHandler::MAX_REASONABLE_SIZE );
+    size_t unreasonablyLargeSize = static_cast<size_t>(StegoHandler::MAX_REASONABLE_SIZE) + 1;
+    auto result = LSBStegoHandler::ValidateCapacity(10000000000, unreasonablyLargeSize, LSBStegoHandler::HEADER_SIZE_BITS, StegoHandler::MAX_REASONABLE_SIZE );
     EXPECT_TRUE(result.IsError());
     EXPECT_EQ(result.GetErrorCode(), ErrorCode::DataTooLarge);
 }
@@ -208,9 +208,9 @@ TEST(LSBHandler_Extract, HandlesCorruptSizeHeader) {
     for (int i = 0; i < 32; i++) {
         pixels[i] = (i < 16) ? 1 : 0;
     }
-    ImageData imgData2(pixels, static_cast<int>(pixels.size()), 1, 1);
+    ImageData imgData(pixels, static_cast<int>(pixels.size()), 1, 1);
 
-    auto result = handler.ExtractMethod(imgData2, "");
+    auto result = handler.ExtractMethod(imgData, "");
     EXPECT_TRUE(result.IsError());
     
     std::vector<uint8_t> pixels2(1000, 0xFF);
@@ -385,7 +385,7 @@ TEST(LSBHandler_Errors, RejectsEmptyData) {
 }
 
 TEST(LSBHandler_Errors, ProvidesDescriptiveErrorMessages) {
-    auto result = LSBStegoHandler::ValidateCapacity(100, 50, LSBStegoHandler::HEADER_SIZE_BITS, LSBStegoHandler::MAX_REASONABLE_SIZE );
+    auto result = LSBStegoHandler::ValidateCapacity(100, 50, LSBStegoHandler::HEADER_SIZE_BITS, StegoHandler::MAX_REASONABLE_SIZE );
     EXPECT_TRUE(result.IsError());
     EXPECT_EQ(result.GetErrorCode(), ErrorCode::InsufficientCapacity);
     
