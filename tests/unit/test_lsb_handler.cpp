@@ -214,9 +214,9 @@ TEST(LSBHandler_Extract, HandlesCorruptSizeHeader) {
     EXPECT_TRUE(result.IsError());
     
     std::vector<uint8_t> pixels2(1000, 0xFF);
-    ImageData imgDataEx2(pixels2, static_cast<int>(pixels2.size()), 1, 1);
+    ImageData imgData2(pixels2, static_cast<int>(pixels2.size()), 1, 1);
 
-    auto result2 = handler.ExtractMethod(imgDataEx2, "");
+    auto result2 = handler.ExtractMethod(imgData2, "");
     EXPECT_TRUE(result2.IsError());
 }
 
