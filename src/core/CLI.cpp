@@ -425,7 +425,7 @@ void CLI::PrintVisualUsage() {
               << "    -d, --data <file>      File containing data to hide\n\n"
               << "  Optional arguments:\n"
               << "    -m, --method <method>  Steganography method used to imprint data ( defaults to \"" << LSB_METHOD << "\" if not provided)\n"
-              << "    -o, --output <file>    Output stego image ( defaults to \"" << DEFAULT_IMAGE_NAME << "\" if not provided)\n\n"
+              << "    -o, --output <file>    Output stego image ( defaults to \"" << DEFAULT_IMAGE_VISUAL_NAME << "\" if not provided)\n\n"
               << "    -p, --password <pass>  Password for encrypting the data (empty if not provided)\n";
 }
 
