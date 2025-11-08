@@ -60,6 +60,11 @@ stegtool embed -i cover.png -d secret.txt -o stego.png -p mypassword
 stegtool extract -i stego.png -o recovered.txt -p mypassword
 ```
 
+**Preview how data will be embed into an image:**
+```bash
+stegtool visual -i cover.png -d secret.txt -o stego.png -p mypassword
+```
+
 **Get help:**
 ```bash
 stegtool --help
