@@ -121,7 +121,7 @@ stegtool/
 │           ├── LSBStegoHandler.h/.cpp    # Class to handle LSB methods 
 │           ├── ordered/                  # LSB Ordered implementation
 │           |   └── LSBStegoHandlerOrdered.h/.cpp
-|           └── shuffle/                  # LSB Shuffled implementation
+│           └── shuffle/                  # LSB Shuffled implementation
 │               └── LSBStegoHandlerShuffle.h/.cpp
 ├── tests/
 │   └── test_all.cpp                      # Unit tests (Google Test)
