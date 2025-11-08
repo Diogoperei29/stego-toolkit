@@ -51,7 +51,7 @@ Result<> LSBStegoHandler::VisualizeMethod(ImageData &imageData) {
     std::size_t imgSize = pixels.size();
 
     for (std::size_t byteIdx = 0; byteIdx < imgSize; ++byteIdx) {
-        if (pixels[byteIdx] &= 0x01) {
+        if (pixels[byteIdx] & 0x01) {
             pixels[byteIdx] = (uint8_t)255; 
         }
         else {
