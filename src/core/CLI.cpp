@@ -49,8 +49,7 @@ int CLI::Run(int argc, char *argv[]) {
         }
 
         //Handle visualize command
-        else if (command == "visual")
-        {
+        else if (command == "visual") {
             return HandleVisualCommand(parsedOptions);
         }
         
