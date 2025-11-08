@@ -54,6 +54,14 @@ public:
     static Result<> ValidateCapacity(std::size_t pixelCount, std::size_t dataSize, 
                                      std::size_t headerBits, std::size_t fileMaxSize);
 
+    /**
+     * @brief Visualizes data stored into pixel array using LSB technique.
+     * 
+     * @param imageData Pixel data to read from
+     * @return Result indicating success or error
+     */
+    Result<> VisualizeMethod( ImageData &imageData) override;
+    
     virtual ~LSBStegoHandler() = default;
 };
 

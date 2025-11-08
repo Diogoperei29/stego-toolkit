@@ -8,6 +8,7 @@
 
 #define DEFAULT_IMAGE_NAME "embedded-steno.png"
 #define DEFAULT_EXTRACTION_NAME  "extracted.steno"
+#define DEFAULT_IMAGE_VISUAL_NAME "visualization-steno.png"
 
 #define LSB_METHOD "lsb"
 #define LSB_SHUFFLE_METHOD "lsbshuffle"
@@ -42,8 +43,10 @@ private:
    static void PrintExamples();
    static void PrintEmbedUsage();
    static void PrintExtractUsage();
+   static void PrintVisualUsage();
    static bool ConfirmOverwrite(const std::string& inputFile, const std::string& outputFile);
    static int HandleEmbedCommand(const cxxopts::ParseResult& parsedOptions);
+   static int HandleVisualCommand(const cxxopts::ParseResult& parsedOptions);
    static int HandleExtractCommand(const cxxopts::ParseResult& parsedOptions);
    static std::string StegoMethodToString(StegoMethod method);
    static StegoMethod ParseStegoMethod(const std::string& methodStr);
