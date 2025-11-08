@@ -44,3 +44,19 @@ Result<> LSBStegoHandler::ValidateCapacity(std::size_t pixelCount, std::size_t d
     
     return Result<>();
 }
+
+Result<> LSBStegoHandler::VisualizeMethod(ImageData &imageData) {
+    
+    auto &pixels = imageData.pixels;
+    std::size_t imgSize = pixels.size();
+
+    for (std::size_t byteIdx = 0; byteIdx < imgSize; ++byteIdx) {
+        if (pixels[byteIdx] &= 0x01) {
+            pixels[byteIdx] = (uint8_t)255; 
+        }
+        else {
+            pixels[byteIdx] = (uint8_t)0;
+        }   
+    }
+    return Result<>();
+}
