@@ -104,25 +104,25 @@ The encrypted payload is embedded into the image using the selected algorithm. T
 stegtool/
 ├── src/
 │   ├── main.cpp
-│   ├── core/                         # Application logic
-│   │   └── CLI.h/.cpp                # Command-line interface
-│   ├── utils/                        # Utility modules
-│   │   ├── ErrorHandler.h/.cpp       # Result<T> error handling system
-│   │   ├── CryptoModule.h/.cpp       # AES-256-CBC encryption
-│   │   └── ImageIO.h/.cpp            # Image loading/saving (stb library)
-│   └── algorithms/                   # Steganography algorithms
-│       ├── StegoHandler.h            # Abstract base class
-│       └── lsb/                      # LSB implementation
-│       |   ├── LSBStegoHandler.h
-│       |   └── LSBStegoHandler.cpp
-│       └── lsbshuffle/               # LSB Shuffled implementation
-│           ├── LSBShuffleStegoHandler.h
-│           └── LSBShuffleStegoHandler.cpp
+│   ├── core/                             # Application logic
+│   │   └── CLI.h/.cpp                    # Command-line interface
+│   ├── utils/                            # Utility modules
+│   │   ├── ErrorHandler.h/.cpp           # Result<T> error handling system
+│   │   ├── CryptoModule.h/.cpp           # AES-256-CBC encryption
+│   │   └── ImageIO.h/.cpp                # Image loading/saving (stb library)
+│   └── algorithms/                       # Steganography algorithms
+│       ├── StegoHandler.h/.cpp           # Abstract base class
+│       └── lsb/                          # LSB implementation
+│           ├── LSBStegoHandler.h/.cpp    # Class to handle LSB methods 
+│           ├── ordered/                  # LSB Ordered implementation
+│           |   └── LSBStegoHandlerOrdered.h/.cpp
+|           └── shuffle/                  # LSB Shuffled implementation
+│               └── LSBStegoHandlerShuffle.h/.cpp
 ├── tests/
-│   └── test_all.cpp                  # Unit tests (Google Test)
-├── CMakeLists.txt                    # Build configuration
-├── LICENSE                           # Apache 2.0 license
-├── THIRD-PARTY                       # Third-party attribution
+│   └── test_all.cpp                      # Unit tests (Google Test)
+├── CMakeLists.txt                        # Build configuration
+├── LICENSE                               # Apache 2.0 license
+├── THIRD-PARTY                           # Third-party attribution
 └── README.md
 ```
 
@@ -171,6 +171,19 @@ Options:
   -o, --output    Output file for extracted data
   -p, --password  Password for decryption
 ```
+
+**`visual`** - Preview stego embed output on image
+```bash
+stegtool visual -i <cover_image> -d <data_file> -m <stego_method> -o <output_image> -p <password>
+
+Options:
+  -i, --input     Input cover image (PNG/BMP/JPEG)
+  -d, --data      Data file to hide
+  -m, --method    Steganography method selection
+  -o, --output    Output pre-visualization image of stego output
+  -p, --password  Password for encryption
+```
+
 ### Steganography Method Selection
 Usage example:
 **`lsb`** - Hide data inside an image using lsb - least significant bit method
