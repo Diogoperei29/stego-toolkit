@@ -38,6 +38,11 @@ enum class ErrorCode {
     InvalidDataSize = 502,
     CorruptedPayload = 503,
     NoEmbeddedData = 504,
+
+    // Compression/Decompression errors
+    CompressionFailed = 600,
+    DecompressionFailed = 601,
+    BadCompressedData = 602,
     
     // General errors
     UnknownError = 900,

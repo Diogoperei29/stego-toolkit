@@ -1,7 +1,9 @@
 #include "StegoHandler.h"
 #include "../utils/ImageIO.h"
 #include "../utils/CryptoModule.h"
+#include "../utils/CompressionModule.h"
 
+#include <iostream>
 #include <vector>
 #include <string>
 #include <fstream>
@@ -10,7 +12,8 @@
 Result<> StegoHandler::Embed(const std::string &coverFile,
                              const std::string &dataFile,
                              const std::string &outputFile,
-                             const std::string &password) {
+                             const std::string &password,
+                             int compressionLevel) {
     
     // Load cover image
     auto imageResult = ImageIO::Load(coverFile);
@@ -41,8 +44,21 @@ Result<> StegoHandler::Embed(const std::string &coverFile,
         );
     }
 
+    // Optionally compress data before encryption
+    std::vector<uint8_t> processedData = plainData;
+    if (compressionLevel > 0) {
+        auto compressResult = CompressionModule::CompressData(plainData, compressionLevel);
+        if (!compressResult) {
+            return Result<>(
+                compressResult.GetErrorCode(),
+                "Compression failed: " + compressResult.GetErrorMessage()
+            );
+        }
+        processedData = compressResult.GetValue();
+    }
+
     // Encrypt data
-    auto encryptResult = CryptoModule::EncryptData(plainData, password);
+    auto encryptResult = CryptoModule::EncryptData(processedData, password);
     if (!encryptResult) {
         return Result<>(
             encryptResult.GetErrorCode(),
@@ -52,8 +68,14 @@ Result<> StegoHandler::Embed(const std::string &coverFile,
     
     const auto& encryptedData = encryptResult.GetValue();
 
-    // Embed data into image
-    auto embedResult = EmbedMethod(imageData, encryptedData, password);
+    // Build payload: [1-byte compression level header | encrypted data]
+    std::vector<uint8_t> payload;
+    payload.reserve(1 + encryptedData.size());
+    payload.push_back(static_cast<uint8_t>(compressionLevel));
+    payload.insert(payload.end(), encryptedData.begin(), encryptedData.end());
+
+    // Embed payload into image
+    auto embedResult = EmbedMethod(imageData, payload, password);
     if (!embedResult) {
         return embedResult;
     }
@@ -79,7 +101,7 @@ Result<> StegoHandler::Extract(const std::string &stegoFile,
     
     const auto& imageData = imageResult.GetValue();
     
-    // Extract encrypted data
+    // Extract payload (compression header byte + encrypted data)
     auto extractResult = ExtractMethod(imageData, password);
     if (!extractResult) {
         return Result<>(
@@ -88,7 +110,14 @@ Result<> StegoHandler::Extract(const std::string &stegoFile,
         );
     }
     
-    const auto& encryptedData = extractResult.GetValue();
+    const auto& payload = extractResult.GetValue();
+
+    // Parse compression header: first byte is the level used during embedding
+    if (payload.empty()) {
+        return Result<>(ErrorCode::CorruptedPayload, "Extracted payload is empty");
+    }
+    uint8_t embeddedCompressionLevel = payload[0];
+    std::vector<uint8_t> encryptedData(payload.begin() + 1, payload.end());
 
     // Decrypt data
     auto decryptResult = CryptoModule::DecryptData(encryptedData, password);
@@ -99,7 +128,24 @@ Result<> StegoHandler::Extract(const std::string &stegoFile,
         );
     }
     
-    const auto& plainData = decryptResult.GetValue();
+    const auto& decryptedData = decryptResult.GetValue();
+
+    // Decompress if the header indicates compression was applied
+    std::vector<uint8_t> plainData;
+    if (embeddedCompressionLevel > 0) {
+        std::cout << "  Compression: ZSTD level " << static_cast<int>(embeddedCompressionLevel)
+                  << " detected in header — decompressing...\n";
+        auto decompressResult = CompressionModule::DecompressData(decryptedData);
+        if (!decompressResult) {
+            return Result<>(
+                decompressResult.GetErrorCode(),
+                "Decompression failed: " + decompressResult.GetErrorMessage()
+            );
+        }
+        plainData = decompressResult.GetValue();
+    } else {
+        plainData = decryptedData;
+    }
 
     // Write output file
     std::ofstream outFile(outputFile, std::ios::binary);
@@ -126,7 +172,8 @@ Result<> StegoHandler::Extract(const std::string &stegoFile,
 Result<> StegoHandler::Visual(const std::string &coverFile,
                              const std::string &dataFile,
                              const std::string &outputFile,
-                             const std::string &password) {
+                             const std::string &password,
+                             int compressionLevel) {
     
     // Load cover image
     auto imageResult = ImageIO::Load(coverFile);
@@ -162,8 +209,21 @@ Result<> StegoHandler::Visual(const std::string &coverFile,
         );
     }
 
+    // Optionally compress data before encryption
+    std::vector<uint8_t> processedData = plainData;
+    if (compressionLevel > 0) {
+        auto compressResult = CompressionModule::CompressData(plainData, compressionLevel);
+        if (!compressResult) {
+            return Result<>(
+                compressResult.GetErrorCode(),
+                "Compression failed: " + compressResult.GetErrorMessage()
+            );
+        }
+        processedData = compressResult.GetValue();
+    }
+
     // Encrypt data
-    auto encryptResult = CryptoModule::EncryptData(plainData, password);
+    auto encryptResult = CryptoModule::EncryptData(processedData, password);
     if (!encryptResult) {
         return Result<>(
             encryptResult.GetErrorCode(),
@@ -173,8 +233,14 @@ Result<> StegoHandler::Visual(const std::string &coverFile,
     
     const auto& encryptedData = encryptResult.GetValue();
 
-    // Embed data into image
-    auto embedResult = EmbedMethod(imageData, encryptedData, password);
+    // Build payload: [1-byte compression level header | encrypted data]
+    std::vector<uint8_t> payload;
+    payload.reserve(1 + encryptedData.size());
+    payload.push_back(static_cast<uint8_t>(compressionLevel));
+    payload.insert(payload.end(), encryptedData.begin(), encryptedData.end());
+
+    // Embed payload into image
+    auto embedResult = EmbedMethod(imageData, payload, password);
     if (!embedResult) {
         return embedResult;
     }

@@ -9,6 +9,7 @@ A modern C++ toolkit for hiding and extracting data within images using steganog
 - **Image Steganography** - Hide data inside PNG/BMP/JPEG images
 - **Strong Encryption** - AES-256-CBC with PBKDF2-HMAC-SHA256 key derivation (10,000 iterations)
 - **Authenticated Encryption** - HMAC-SHA256 for integrity verification (Encrypt-then-MAC)
+- **Compression** - Optional ZSTD compression (levels 1-22) before encryption to reduce embedded payload size
 - **Standard Compliance** - OpenSSL-compatible encryption format
 - **Modular Architecture** - Extensible design supporting multiple steganography algorithms (planned)
 - **Cross-Platform** - Windows, Linux
@@ -55,6 +56,11 @@ cmake --build .
 stegtool embed -i cover.png -d secret.txt -o stego.png -p mypassword
 ```
 
+**Embed with ZSTD compression (level 3):**
+```bash
+stegtool embed -i cover.png -d secret.txt -o stego.png -p mypassword -c 3
+```
+
 **Extract hidden data:**
 ```bash
 stegtool extract -i stego.png -o recovered.txt -p mypassword
@@ -85,14 +91,27 @@ stegtool --version
 6. HMAC-SHA256 computed over `[salt | IV | ciphertext]` for authentication
 7. Output format: `[salt | IV | ciphertext | HMAC]`
 
+### Compression Layer (optional)
+When `-c <level>` is specified during embed, data is compressed with ZSTD before encryption:
+1. Data is compressed at the requested ZSTD level (1 = fastest, 22 = best ratio)
+2. A 1-byte compression header (the level used) is prepended to the encrypted payload
+3. During extraction this header is read automatically — if it is non-zero the payload is decrypted and then decompressed transparently, requiring no extra flags from the user
+
+> [!NOTE]
+> Specifying `-c 0` (or omitting `-c` entirely) disables compression completely.
+> ZSTD's level 0 is an alias for its internal default level (3); this tool intentionally
+> maps level 0 to **no compression** so that the behaviour is unambiguous.
+
 ### Embedding Layer
 The encrypted payload is embedded into the image using the selected algorithm. The algorithm modifies pixel values in a way that is imperceptible to the human eye while storing the data securely.
 
 ### Extraction Layer
-1. Load stego image and extract embedded data
-2. Verify HMAC using password-derived key (Encrypt-then-MAC)
-3. Decrypt ciphertext using password
-4. Save recovered plaintext
+1. Load stego image and extract embedded payload
+2. Read the 1-byte compression header from the payload
+3. Verify HMAC using password-derived key (Encrypt-then-MAC)
+4. Decrypt ciphertext using password
+5. Decompress data if the compression header is non-zero (automatic — no user flag required)
+6. Save recovered plaintext
 
 **Security Model:**
 - **Password is the only secret** - Without it, data cannot be decrypted
@@ -156,14 +175,15 @@ The project uses the following libraries, automatically fetched via CMake FetchC
 
 **`embed`** - Hide data inside an image
 ```bash
-stegtool embed -i <cover_image> -d <data_file> -m <stego_method> -o <output_image> -p <password>
+stegtool embed -i <cover_image> -d <data_file> -m <stego_method> -o <output_image> -p <password> -c <level>
 
 Options:
-  -i, --input     Input cover image (PNG/BMP/JPEG)
-  -d, --data      Data file to hide
-  -m, --method    Steganography method selection
-  -o, --output    Output stego image
-  -p, --password  Password for encryption
+  -i, --input        Input cover image (PNG/BMP/JPEG)
+  -d, --data         Data file to hide
+  -m, --method       Steganography method selection
+  -o, --output       Output stego image
+  -p, --password     Password for encryption
+  -c, --compression  ZSTD compression level 1-22 (0 or omitted = disabled)
 ```
 
 **`extract`** - Extract hidden data from an image
@@ -175,18 +195,22 @@ Options:
   -m, --method    Steganography method selection
   -o, --output    Output file for extracted data
   -p, --password  Password for decryption
+
+Note: decompression is applied automatically when the payload header indicates
+      the data was compressed during embedding — no extra flag is needed.
 ```
 
 **`visual`** - Preview stego embed output on image
 ```bash
-stegtool visual -i <cover_image> -d <data_file> -m <stego_method> -o <output_image> -p <password>
+stegtool visual -i <cover_image> -d <data_file> -m <stego_method> -o <output_image> -p <password> -c <level>
 
 Options:
-  -i, --input     Input cover image (PNG/BMP/JPEG)
-  -d, --data      Data file to hide
-  -m, --method    Steganography method selection
-  -o, --output    Output pre-visualization image of stego output
-  -p, --password  Password for encryption
+  -i, --input        Input cover image (PNG/BMP/JPEG)
+  -d, --data         Data file to hide
+  -m, --method       Steganography method selection
+  -o, --output       Output pre-visualization image of stego output
+  -p, --password     Password for encryption
+  -c, --compression  ZSTD compression level 1-22 (0 or omitted = disabled)
 ```
 
 ### Steganography Method Selection
@@ -211,7 +235,9 @@ Steganography Methods Table:
 > [!WARNING]  
 > If you omit or insert wrong Stego method option the program will revert to simple lsb method.\
 > If you omit output file the program will generate one with default name.\
-> If an existing file has the same name as a output file the program will ask to overwrite the file and wait for additional user input.
+> If an existing file has the same name as a output file the program will ask to overwrite the file and wait for additional user input.\
+> Specifying `-c 0` or omitting `-c` completely disables compression. ZSTD internally treats
+> level 0 as its default level (3), but stegtool maps it to **no compression** for clarity.
 
 ### Global Options
 - `-h, --help` - Display help message

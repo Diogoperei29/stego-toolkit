@@ -112,6 +112,15 @@ int CLI::HandleEmbedCommand(const cxxopts::ParseResult& parsedOptions) {
         std::cout << "         This provides minimal security.\n\n";
     }
 
+    int compressionLevel = 0;
+    if (parsedOptions.count("compression")) {
+        compressionLevel = parsedOptions["compression"].as<int>();
+        if (compressionLevel < 0 || compressionLevel > 22) {
+            std::cerr << "Warning: Compression level must be 0-22. Defaulting to 0 (disabled).\n";
+            compressionLevel = 0;
+        }
+    }
+
     // Check for output file overwrite
     if (!ConfirmOverwrite(inputFile, outputFile)) {
         std::cout << "\nOperation cancelled by user.\n";
@@ -123,10 +132,15 @@ int CLI::HandleEmbedCommand(const cxxopts::ParseResult& parsedOptions) {
     std::cout << "  Data file:   " << dataFile << "\n";
     std::cout << "  Method: " << stegoMethod << " - " << StegoMethodToString(stegoMethod) << "\n";
     std::cout << "  Output file: " << outputFile << "\n";
+    if (compressionLevel > 0) {
+        std::cout << "  Compression: ZSTD level " << compressionLevel << "\n";
+    } else {
+        std::cout << "  Compression: disabled\n";
+    }
 
     std::unique_ptr<StegoHandler> handler = ChooseHandlerMethod(stegoMethod);
     
-    auto embedResult = handler->Embed(inputFile, dataFile, outputFile, password);
+    auto embedResult = handler->Embed(inputFile, dataFile, outputFile, password, compressionLevel);
     if (!embedResult) {
         std::cerr << "\nEmbedding Failed\n";
         std::cerr << "Error: " << embedResult.GetErrorMessage() << "\n";
@@ -181,6 +195,15 @@ int CLI::HandleVisualCommand(const cxxopts::ParseResult& parsedOptions) {
         std::cout << "         This provides minimal security.\n\n";
     }
 
+    int compressionLevel = 0;
+    if (parsedOptions.count("compression")) {
+        compressionLevel = parsedOptions["compression"].as<int>();
+        if (compressionLevel < 0 || compressionLevel > 22) {
+            std::cerr << "Warning: Compression level must be 0-22. Defaulting to 0 (disabled).\n";
+            compressionLevel = 0;
+        }
+    }
+
     // Check for output file overwrite
     if (!ConfirmOverwrite(inputFile, outputFile)) {
         std::cout << "\nOperation cancelled by user.\n";
@@ -192,10 +215,15 @@ int CLI::HandleVisualCommand(const cxxopts::ParseResult& parsedOptions) {
     std::cout << "  Data file:   " << dataFile << "\n";
     std::cout << "  Method: " << stegoMethod << " - " << StegoMethodToString(stegoMethod) << "\n";
     std::cout << "  Output file: " << outputFile << "\n";
+    if (compressionLevel > 0) {
+        std::cout << "  Compression: ZSTD level " << compressionLevel << "\n";
+    } else {
+        std::cout << "  Compression: disabled\n";
+    }
 
     std::unique_ptr<StegoHandler> handler = ChooseHandlerMethod(stegoMethod);
     
-    auto visualResult = handler->Visual(inputFile, dataFile, outputFile, password);
+    auto visualResult = handler->Visual(inputFile, dataFile, outputFile, password, compressionLevel);
     if (!visualResult) {
         std::cerr << "\nVisualization Failed\n";
         std::cerr << "Error: " << visualResult.GetErrorMessage() << "\n";
@@ -357,14 +385,11 @@ cxxopts::Options CLI::BuildCxxOptions()
         ("d,data", "Data file to hide in the image", cxxopts::value<std::string>())
         ("m,method", "Steganography method selection", cxxopts::value<std::string>())
         ("o,output", "Output stego image file", cxxopts::value<std::string>())
-        ("p,password", "Password for encryption", cxxopts::value<std::string>());
+        ("p,password", "Password for encryption", cxxopts::value<std::string>())
+        ("c,compression", "ZSTD compression level (1-22, 0 or omitted = disabled)", cxxopts::value<int>());
 
     options.add_options("Extract")
-        ("extract", "Extract data from an image")
-        ("I,input-stego", "Input stego image file", cxxopts::value<std::string>())
-        ("M,method-stego", "Steganography method selection", cxxopts::value<std::string>())
-        ("O,output-data", "Output file for extracted data", cxxopts::value<std::string>())
-        ("P,password-extract", "Password for decryption", cxxopts::value<std::string>());
+        ("extract", "Extract data from an image");
     
     options.add_options("Visual")
         ("visual", "Visualize stego data output");
@@ -390,20 +415,23 @@ void CLI::PrintExamples() {
     std::cout << "Examples:\n"
               << "  Embed a secret message:\n"
               << "    stegtool embed -i cover.png -d secret.txt -m lsb -o stego.png -p mypassword\n\n"
-              << "  Extract the hidden message:\n"
+              << "  Embed with ZSTD compression (level 3):\n"
+              << "    stegtool embed -i cover.png -d secret.txt -o stego.png -p mypassword -c 3\n\n"
+              << "  Extract the hidden message (decompression is automatic if data was compressed):\n"
               << "    stegtool extract -i stego.png -m lsb -o recovered.txt -p mypassword\n\n";
 }
 
 void CLI::PrintEmbedUsage() {
     std::cout << "Embed Usage:\n"
-              << "  stegtool embed -i <cover_image> -d <data_file> [-m <stego_method>] [-o <output_image>] [-p <password>]\n\n"
+              << "  stegtool embed -i <cover_image> -d <data_file> [-m <stego_method>] [-o <output_image>] [-p <password>] [-c <level>]\n\n"
               << "  Required arguments:\n"
               << "    -i, --input <file>     Cover image (PNG format) to hide data in\n"
               << "    -d, --data <file>      File containing data to hide\n\n"
               << "  Optional arguments:\n"
               << "    -m, --method <method>  Steganography method used to imprint data ( defaults to \"" << LSB_METHOD << "\" if not provided)\n"
-              << "    -o, --output <file>    Output stego image ( defaults to \"" << DEFAULT_IMAGE_NAME << "\" if not provided)\n\n"
-              << "    -p, --password <pass>  Password for encrypting the data (empty if not provided)\n";
+              << "    -o, --output <file>    Output stego image ( defaults to \"" << DEFAULT_IMAGE_NAME << "\" if not provided)\n"
+              << "    -p, --password <pass>  Password for encrypting the data (empty if not provided)\n"
+              << "    -c, --compression <N>  ZSTD compression level 1-22 (0 or omitted = disabled)\n";
 }
 
 void CLI::PrintExtractUsage() {
@@ -413,20 +441,24 @@ void CLI::PrintExtractUsage() {
               << "    -i, --input <file>     Stego image (PNG format) with hidden data\n\n"
               << "  Optional arguments:\n"
               << "    -m, --method <method>  Steganography method used to extract data ( defaults to \"" << LSB_METHOD << "\" if not provided)\n"
-              << "    -o, --output <file>  Output file for extracted data ( defaults to \"" << DEFAULT_EXTRACTION_NAME << "\" if not provided)\n"
-              << "    -p, --password <pass>  Password for decrypting the data (empty if not provided)\n";;
+              << "    -o, --output <file>    Output file for extracted data ( defaults to \"" << DEFAULT_EXTRACTION_NAME << "\" if not provided)\n"
+              << "    -p, --password <pass>  Password for decrypting the data (empty if not provided)\n"
+              << "\n"
+              << "  Note: If the embedded data was compressed, decompression is handled automatically\n"
+              << "        based on the compression metadata stored in the payload header.\n";
 }
 
 void CLI::PrintVisualUsage() {
     std::cout << "Visualize Usage:\n"
-              << "  stegtool visual -i <cover_image> -d <data_file> [-m <stego_method>] [-o <output_image>] [-p <password>]\n\n"
+              << "  stegtool visual -i <cover_image> -d <data_file> [-m <stego_method>] [-o <output_image>] [-p <password>] [-c <level>]\n\n"
               << "  Required arguments:\n"
               << "    -i, --input <file>     Cover image (PNG format) to hide data in\n"
               << "    -d, --data <file>      File containing data to hide\n\n"
               << "  Optional arguments:\n"
               << "    -m, --method <method>  Steganography method used to imprint data ( defaults to \"" << LSB_METHOD << "\" if not provided)\n"
-              << "    -o, --output <file>    Output stego image ( defaults to \"" << DEFAULT_IMAGE_VISUAL_NAME << "\" if not provided)\n\n"
-              << "    -p, --password <pass>  Password for encrypting the data (empty if not provided)\n";
+              << "    -o, --output <file>    Output stego image ( defaults to \"" << DEFAULT_IMAGE_VISUAL_NAME << "\" if not provided)\n"
+              << "    -p, --password <pass>  Password for encrypting the data (empty if not provided)\n"
+              << "    -c, --compression <N>  ZSTD compression level 1-22 (0 or omitted = disabled)\n";
 }
 
 bool CLI::ConfirmOverwrite(const std::string& inputFile, const std::string& outputFile) {

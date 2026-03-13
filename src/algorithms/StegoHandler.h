@@ -57,12 +57,14 @@ public:
     * @param dataFile Path to the file to embed
     * @param outputFile Path to save the stego image
     * @param password Password used for AES encryption
+    * @param compressionLevel ZSTD compression level (0 = disabled, 1-22 = enabled)
     * @return Result indicating success or detailed error
     */
     Result<> Embed(const std::string &coverFile,
                    const std::string &dataFile,
                    const std::string &outputFile,
-                   const std::string &password);
+                   const std::string &password,
+                   int compressionLevel = 0);
 
     /**
     * @brief Visualizes the embedding of a file into a cover image using steganography.
@@ -71,12 +73,14 @@ public:
     * @param dataFile Path to the file to embed
     * @param outputFile Path to save the stego image
     * @param password Password used for AES encryption
+    * @param compressionLevel ZSTD compression level (0 = disabled, 1-22 = enabled)
     * @return Result indicating success or detailed error
     */
     Result<> Visual(const std::string &coverFile,
                    const std::string &dataFile,
                    const std::string &outputFile,
-                   const std::string &password);
+                   const std::string &password,
+                   int compressionLevel = 0);
 
     /**
     * @brief Extracts a hidden file from a stego image using steganography.

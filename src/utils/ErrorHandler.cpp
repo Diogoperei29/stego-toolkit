@@ -69,6 +69,14 @@ std::string ErrorHandler::GetErrorDescription(ErrorCode code) {
         case ErrorCode::NoEmbeddedData:
             return "No embedded data found in image";
             
+        // Compression/Decompression errors
+        case ErrorCode::CompressionFailed:
+            return "Compression operation failed";
+        case ErrorCode::DecompressionFailed:
+            return "Decompression operation failed";
+        case ErrorCode::BadCompressedData:
+            return "Compressed data is corrupted";
+            
         // General errors
         case ErrorCode::UnknownError:
             return "An unknown error occurred";

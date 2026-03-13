@@ -11,8 +11,12 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
+# Export compile commands for IDE integration (e.g. VS Code IntelliSense)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 ### EXTERNAL LIBRARIES ###
 include(FetchContent)
+
 # Fetch Google Test
 FetchContent_Declare(
     googletest
@@ -36,6 +40,18 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(stb)
 
+FetchContent_Declare(
+    zstd
+    GIT_REPOSITORY https://github.com/facebook/zstd.git
+    GIT_TAG        v1.5.7
+    SOURCE_SUBDIR  build/cmake
+)
+set(ZSTD_BUILD_PROGRAMS OFF CACHE BOOL "" FORCE)
+set(ZSTD_BUILD_TESTS    OFF CACHE BOOL "" FORCE)
+set(ZSTD_BUILD_SHARED   OFF CACHE BOOL "" FORCE)
+set(ZSTD_BUILD_STATIC   ON  CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(zstd)
+
 # Create an interface library for stb headers
 add_library(stb_headers INTERFACE)
 target_include_directories(stb_headers SYSTEM INTERFACE ${stb_SOURCE_DIR}) # SYSTEM to suppress warnings
@@ -57,6 +73,7 @@ endif()
 set(LIB_SOURCES
   src/algorithms/StegoHandler.cpp
   src/core/CLI.cpp
+  src/utils/CompressionModule.cpp
   src/utils/CryptoModule.cpp
   src/utils/ErrorHandler.cpp
   src/utils/ImageIO.cpp
@@ -68,6 +85,7 @@ set(LIB_SOURCES
 set(LIB_HEADERS
   src/algorithms/StegoHandler.h
   src/core/CLI.h
+  src/utils/CompressionModule.h
   src/utils/CryptoModule.h
   src/utils/ErrorHandler.h
   src/utils/ImageIO.h
@@ -79,7 +97,7 @@ set(LIB_HEADERS
 # StegTool library
 add_library(stegtool_lib STATIC ${LIB_SOURCES} ${LIB_HEADERS})
 target_include_directories(stegtool_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
-target_link_libraries(stegtool_lib PUBLIC OpenSSL::Crypto stb_headers cxxopts::cxxopts)
+target_link_libraries(stegtool_lib PUBLIC OpenSSL::Crypto stb_headers cxxopts::cxxopts libzstd_static)
 target_compile_options(stegtool_lib PRIVATE ${WARNING_FLAGS})
 
 # Main Executable
